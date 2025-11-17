@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Hello Login — UHD only</title>
+        <style>
+            :root{--bg:#f3f4f6;--card:#fff;--accent:#0b74de;--danger:#dc3545;--success:#198754}
+            html,body{height:100%;margin:0;font-family:Segoe UI, Roboto, Arial, sans-serif;background:linear-gradient(180deg,var(--bg),#e9eef6)}
+            .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px}
+            .card{background:var(--card);padding:28px;border-radius:10px;box-shadow:0 6px 20px rgba(11,22,40,0.08);width:100%;max-width:420px}
+            h1{margin:0 0 6px;font-size:20px}
+            p.lead{margin:0 0 18px;color:#555}
+            label{display:block;font-size:13px;margin-bottom:6px}
+            input[type="text"]{width:100%;padding:10px 12px;border:1px solid #ccd6e6;border-radius:6px;font-size:15px}
+            button{margin-top:12px;width:100%;padding:10px 12px;background:var(--accent);color:#fff;border:0;border-radius:6px;font-size:15px;cursor:pointer}
+            .msg{margin-top:12px;padding:10px;border-radius:6px;font-size:14px;display:none}
+            .msg.error{background:#fff5f5;border:1px solid rgba(220,53,69,0.12);color:var(--danger);display:block}
+            .msg.success{background:#effbf2;border:1px solid rgba(25,135,84,0.12);color:var(--success);display:block}
+            .small{font-size:13px;color:#666;margin-top:8px}
+        </style>
+    </head>
+    <body>
+        <div class="wrap">
+            <main class="card" role="main">
+                <h1>Sign in</h1>
+                <p class="lead">Please enter the ID. Only <strong>UHD</strong> is accepted.</p>
+
+                <form id="loginForm" autocomplete="off">
+                    <label for="idInput">ID</label>
+                    <input id="idInput" name="id" type="text" inputmode="text" aria-label="ID input" placeholder="Enter ID (e.g. UHD)" required />
+                    <button type="submit">Sign in</button>
+                </form>
+
+                <div id="message" class="msg" role="status" aria-live="polite"></div>
+                <p class="small">This is a local demo page — open the file in your browser to test.</p>
+            </main>
+        </div>
+
+        <script>
+            (function(){
+                const ALLOWED = 'UHD';
+                const form = document.getElementById('loginForm');
+                const input = document.getElementById('idInput');
+                const message = document.getElementById('message');
+
+                function showMessage(text, type){
+                    message.textContent = text;
+                    message.className = 'msg ' + (type === 'success' ? 'success' : 'error');
+                }
+
+                form.addEventListener('submit', function(e){
+                    e.preventDefault();
+                    const val = (input.value || '').trim();
+                    if(val === ALLOWED){
+                        showMessage('Hello, ' + ALLOWED + '!', 'success');
+                        // Optionally hide the form on success
+                        form.style.display = 'none';
+                    } else {
+                        showMessage('Invalid ID. Please enter "UHD".', 'error');
+                        input.focus();
+                    }
+                });
+
+                // Optional: allow immediate feedback while typing
+                input.addEventListener('input', function(){
+                    if(message.classList.contains('error')){
+                        message.style.display = 'none';
+                    }
+                });
+            })();
+        </script>
+    </body>
+</html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+</body>
+</html>
