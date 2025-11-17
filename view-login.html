@@ -165,11 +165,19 @@
             </div>
 
             <!-- Additional Info -->
-            <div class="mt-8 text-center">
+            <div class="mt-8 text-center space-y-4">
                 <p class="text-gray-600">
                     Don't have a Health ID? 
                     <a href="#" class="text-indigo-600 font-semibold hover:underline">Register Now</a>
                 </p>
+                
+                <div class="pt-4 border-t border-gray-200">
+                    <p class="text-sm text-gray-500 mb-2">Need help? Test your API connection:</p>
+                    <a href="api-test.html" class="inline-flex items-center text-sm text-blue-600 font-semibold hover:underline">
+                        <i class="ri-settings-3-line mr-1"></i>
+                        Open API Test Page
+                    </a>
+                </div>
             </div>
 
         </div>
@@ -183,20 +191,94 @@
     </footer>
 
     <!-- JavaScript -->
+    <script src="api-service.js"></script>
     <script>
-        document.getElementById('viewLoginForm').addEventListener('submit', function(e) {
+        // Add loading overlay
+        function showLoading(show = true) {
+            const btn = document.querySelector('button[type="submit"]');
+            if (show) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="ri-loader-4-line animate-spin mr-2"></i>Loading...';
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = '<span>View Records</span><i class="ri-arrow-right-line text-xl ml-2"></i>';
+            }
+        }
+        
+        document.getElementById('viewLoginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const healthId = document.getElementById('healthId').value;
+            const healthId = document.getElementById('healthId').value.trim();
             
-            if (healthId.trim() !== '') {
-                // Store health ID in session storage
-                sessionStorage.setItem('healthId', healthId);
-                sessionStorage.setItem('viewMode', 'true');
-                
-                // Redirect to dashboard
-                window.location.href = 'dashboard.html';
+            if (healthId === '') {
+                alert('Please enter a valid Health ID');
+                return;
             }
+            
+            showLoading(true);
+            
+            try {
+                console.log('Attempting to fetch patient data...');
+                console.log('Health ID:', healthId);
+                console.log('API URL:', api.baseUrl);
+                
+                // First check if API is accessible
+                const healthCheck = await api.checkHealth();
+                console.log('Health check result:', healthCheck);
+                
+                if (!healthCheck.success) {
+                    throw new Error('Backend server is not responding. Please ensure the server is running.');
+                }
+                
+                // Fetch patient data from API
+                console.log('Fetching patient data for:', healthId);
+                const result = await api.getPatient(healthId);
+                
+                console.log('API Response:', result);
+                
+                if (result.success && result.data) {
+                    console.log('Patient found:', result.data);
+                    
+                    // Store health ID and patient data in session storage
+                    sessionStorage.setItem('healthId', healthId);
+                    sessionStorage.setItem('viewMode', 'true');
+                    sessionStorage.setItem('patientData', JSON.stringify(result.data));
+                    
+                    // Redirect to dashboard
+                    window.location.href = 'dashboard.html';
+                } else {
+                    // Patient not found
+                    console.warn('Patient not found:', healthId);
+                    alert('Patient not found with Health ID: ' + healthId + 
+                          '\n\nPlease check your Health ID and try again.' +
+                          '\n\nTip: Use the API Test page to verify your backend connection.');
+                    showLoading(false);
+                }
+            } catch (error) {
+                console.error('Error fetching patient data:', error);
+                
+                let errorMessage = 'Error connecting to server.\n\n';
+                
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    errorMessage += 'Network Error: Cannot reach the backend server.\n\n' +
+                                  'Possible causes:\n' +
+                                  '• Backend server is not running\n' +
+                                  '• CORS is blocking the request\n' +
+                                  '• Wrong API URL\n\n' +
+                                  'Current API URL: ' + api.baseUrl;
+                } else {
+                    errorMessage += 'Error: ' + error.message;
+                }
+                
+                alert(errorMessage);
+                showLoading(false);
+            }
+        });
+        
+        // Add API test link
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('View Login Page Loaded');
+            console.log('API Base URL:', api.baseUrl);
         });
     </script>
 
