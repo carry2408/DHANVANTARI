@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital - Add Medical Record | HealthVault ID</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        secondary: '#8b5cf6',
+                        accent: '#06b6d4',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .smooth-shadow {
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .btn-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tab-active {
+            background: linear-gradient(to right, #6366f1, #8b5cf6);
+            color: white;
+        }
+
+        .upload-area {
+            border: 2px dashed #cbd5e1;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area.dragover {
+            border-color: #6366f1;
+            background-color: #eef2ff;
+        }
+
+        .step-indicator {
+            display: none;
+        }
+
+        .step-indicator.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-purple-50 to-teal-50 min-h-screen">
+    
+    <!-- Navbar -->
+    <nav class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="index.html" class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+                        <i class="ri-heart-pulse-fill text-white text-xl"></i>
+                    </div>
+                    <span class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                        HealthVault ID
+                    </span>
+                </a>
+                <a href="dashboard.html" class="text-gray-700 hover:text-indigo-600 transition flex items-center">
+                    <i class="ri-arrow-left-line mr-2"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="fade-in">
+            
+            <!-- Header -->
+            <div class="mb-8 text-center">
+                <div class="w-20 h-20 bg-gradient-to-br from-pink-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="ri-hospital-line text-white text-4xl"></i>
+                </div>
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Hospital Portal</h1>
+                <p class="text-gray-600">Add medical records and update patient information</p>
+            </div>
+
+            <!-- Progress Indicator -->
+            <div class="mb-8">
+                <div class="flex items-center justify-center space-x-4">
+                    <div id="step1-indicator" class="flex items-center">
+                        <div class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold">1</div>
+                        <span class="ml-2 font-semibold text-indigo-600">Verify Hospital</span>
+                    </div>
+                    <div class="w-16 h-1 bg-gray-300"></div>
+                    <div id="step2-indicator" class="flex items-center opacity-50">
+                        <div class="w-10 h-10 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold">2</div>
+                        <span class="ml-2 font-semibold text-gray-600">Enter Patient ID</span>
+                    </div>
+                    <div class="w-16 h-1 bg-gray-300"></div>
+                    <div id="step3-indicator" class="flex items-center opacity-50">
+                        <div class="w-10 h-10 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold">3</div>
+                        <span class="ml-2 font-semibold text-gray-600">Add Records</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 1: Hospital Authentication -->
+            <div id="step1" class="step-indicator active">
+                <div class="bg-white rounded-3xl p-8 md:p-12 smooth-shadow max-w-2xl mx-auto">
+                    
+                    <div class="mb-8 text-center">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2">Hospital Authentication</h2>
+                        <p class="text-gray-600">Verify your hospital credentials to proceed</p>
+                    </div>
+
+                    <!-- Auth Method Tabs -->
+                    <div class="flex gap-4 mb-8">
+                        <button onclick="switchAuthTab('password')" id="passwordTab" class="flex-1 py-4 rounded-xl font-semibold transition tab-active">
+                            <i class="ri-lock-password-line mr-2"></i>
+                            Password
+                        </button>
+                        <button onclick="switchAuthTab('otp')" id="otpTab" class="flex-1 py-4 rounded-xl font-semibold transition bg-gray-100 text-gray-700">
+                            <i class="ri-smartphone-line mr-2"></i>
+                            OTP
+                        </button>
+                    </div>
+
+                    <!-- Password Form -->
+                    <form id="passwordForm" class="space-y-6">
+                        
+                        <!-- Hospital/Center Name -->
+                        <div>
+                            <label for="hospitalName" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Hospital / Scanning Center Name *
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <i class="ri-hospital-line text-gray-400 text-xl"></i>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    id="hospitalName" 
+                                    placeholder="Enter your hospital or center name"
+                                    class="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition text-gray-900"
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Hospital ID -->
+                        <div>
+                            <label for="hospitalId" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Hospital ID *
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <i class="ri-building-line text-gray-400 text-xl"></i>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    id="hospitalId" 
+                                    placeholder="e.g., HOSP12345"
+                                    class="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition text-gray-900"
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Hospital Password -->
+                        <div>
+                            <label for="hospitalPassword" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Access Password *
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <i class="ri-lock-line text-gray-400 text-xl"></i>
+                                </div>
+                                <input 
+                                    type="password" 
+                                    id="hospitalPassword" 
+                                    placeholder="Enter your access password"
+                                    class="w-full pl-12 pr-12 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition text-gray-900"
+                                    required
+                                >
+                                <button type="button" onclick="togglePassword('hospitalPassword')" class="absolute inset-y-0 right-0 pr-4 flex items-center">
+                                    <i class="ri-eye-line text-gray-400 text-xl hover:text-gray-600"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold btn-hover smooth-shadow">
+                            <i class="ri-login-box-line mr-2"></i>
+                            Verify & Continue
+                        </button>
+                    </form>
+
+                    <!-- OTP Form -->
+                    <form id="otpForm" class="space-y-6 hidden">
+                        
+                        <!-- Hospital/Center Name -->
+                        <div>
+                            <label for="hospitalNameOtp" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Hospital / Scanning Center Name *
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <i class="ri-hospital-line text-gray-400 text-xl"></i>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    id="hospitalNameOtp" 
+                                    placeholder="Enter your hospital or center name"
+                                    class="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition text-gray-900"
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Hospital ID -->
+                        <div>
+                            <label for="hospitalIdOtp" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Hospital ID *
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <i class="ri-building-line text-gray-400 text-xl"></i>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    id="hospitalIdOtp" 
+                                    placeholder="e.g., HOSP12345"
+                                    class="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition text-gray-900"
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Phone Number -->
+                        <div>
+                            <label for="hospitalPhone" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Registered Phone Number *
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <i class="ri-phone-line text-gray-400 text-xl"></i>
+                                </div>
+                                <input 
+                                    type="tel" 
+                                    id="hospitalPhone" 
+                                    placeholder="+1 (555) 000-0000"
+                                    class="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition text-gray-900"
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                        <button type="button" onclick="sendOTP()" id="sendOtpBtn" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl font-semibold btn-hover smooth-shadow">
+                            <i class="ri-mail-send-line mr-2"></i>
+                            Send OTP
+                        </button>
+
+                        <!-- OTP Input (Hidden Initially) -->
+                        <div id="otpInputSection" class="hidden space-y-4">
+                            <div>
+                                <label for="otpCode" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Enter 6-Digit OTP *
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="otpCode" 
+                                    placeholder="000000"
+                                    maxlength="6"
+                                    class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition text-gray-900 text-center text-2xl font-bold tracking-widest"
+                                >
+                            </div>
+                            <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold btn-hover smooth-shadow">
+                                <i class="ri-check-line mr-2"></i>
+                                Verify OTP & Continue
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+
+            <!-- Step 2: Enter Patient ID -->
+            <div id="step2" class="step-indicator">
+                <div class="bg-white rounded-3xl p-8 md:p-12 smooth-shadow max-w-2xl mx-auto">
+                    
+                    <div class="mb-8 text-center">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2">Enter Patient Health ID</h2>
+                        <p class="text-gray-600">Provide the patient's HealthVault ID to access their records</p>
+                    </div>
+
+                    <form id="patientIdForm" class="space-y-6">
+                        <div>
+                            <label for="patientHealthId" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Patient Health ID *
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <i class="ri-user-heart-line text-gray-400 text-xl"></i>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    id="patientHealthId" 
+                                    placeholder="e.g., HV123456789"
+                                    class="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition text-gray-900 text-lg font-semibold"
+                                    required
+                                >
+                            </div>
+                            <p class="mt-2 text-sm text-gray-500">
+                                <i class="ri-information-line mr-1"></i>
+                                Please ensure you have patient's consent before accessing records
+                            </p>
+                        </div>
+
+                        <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold btn-hover smooth-shadow">
+                            Access Patient Records
+                            <i class="ri-arrow-right-line ml-2"></i>
+                        </button>
+                    </form>
+
+                </div>
+            </div>
+
+            <!-- Step 3: Add Records -->
+            <div id="step3" class="step-indicator">
+                <div class="bg-white rounded-3xl p-8 md:p-12 smooth-shadow">
+                    
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2">Add Medical Records</h2>
+                        <p class="text-gray-600">Upload reports, add medical conditions, or update patient information</p>
+                        <div class="mt-4 bg-indigo-50 border-2 border-indigo-200 rounded-xl p-4">
+                            <p class="text-sm text-indigo-800">
+                                <i class="ri-information-line mr-2"></i>
+                                <strong>Hospital:</strong> <span id="displayHospitalName">City General Hospital</span> | 
+                                <strong>Patient ID:</strong> <span id="displayPatientId">HV123456789</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Action Tabs -->
+                    <div class="flex flex-wrap gap-2 mb-8">
+                        <button onclick="switchActionTab('report')" id="reportActionTab" class="px-6 py-3 rounded-xl font-semibold transition tab-active">
+                            <i class="ri-file-add-line mr-2"></i>
+                            Add Report
+                        </button>
+                        <button onclick="switchActionTab('condition')" id="conditionActionTab" class="px-6 py-3 rounded-xl font-semibold transition bg-gray-100 text-gray-700">
+                            <i class="ri-heart-add-line mr-2"></i>
+                            Add Condition
+                        </button>
+                        <button onclick="switchActionTab('allergy')" id="allergyActionTab" class="px-6 py-3 rounded-xl font-semibold transition bg-gray-100 text-gray-700">
+                            <i class="ri-alert-line mr-2"></i>
+                            Add Allergy
+                        </button>
+                    </div>
+
+                    <!-- Add Report Form -->
+                    <div id="reportAction" class="action-content">
+                        <form id="addReportForm" class="space-y-6">
+                            
+                            <!-- File Upload -->
+                            <div>
+                                <label class="block text-lg font-semibold text-gray-900 mb-4">
+                                    Upload Medical Document
+                                </label>
+                                <div id="uploadArea" class="upload-area rounded-2xl p-12 text-center cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
+                                    <input type="file" id="fileInput" class="hidden" accept=".pdf,.jpg,.jpeg,.png" />
+                                    <div class="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                                        <i class="ri-upload-cloud-2-line text-white text-4xl"></i>
+                                    </div>
+                                    <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                                        Drop your file here or click to browse
+                                    </h3>
+                                    <p class="text-gray-600">
+                                        Supports PDF, JPG, PNG (Max 10MB)
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Report Details Grid -->
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="reportName" class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Report Name *
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        id="reportName" 
+                                        placeholder="e.g., Blood Test Report"
+                                        class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition"
+                                        required
+                                    >
+                                </div>
+
+                                <div>
+                                    <label for="reportDate" class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Report Date *
+                                    </label>
+                                    <input 
+                                        type="date" 
+                                        id="reportDate" 
+                                        class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition"
+                                        required
+                                    >
+                                </div>
+
+                                <div>
+                                    <label for="doctorName" class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Doctor Name *
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        id="doctorName" 
+                                        placeholder="Dr. John Smith"
+                                        class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition"
+                                        required
+                                    >
+                                </div>
+
+                                <div>
+                                    <label for="reportStatus" class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Report Status *
+                                    </label>
+                                    <select 
+                                        id="reportStatus" 
+                                        class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition"
+                                        required
+                                    >
+                                        <option value="">Select status</option>
+                                        <option value="normal">Normal</option>
+                                        <option value="review">Needs Review</option>
+                                        <option value="critical">Critical</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Notes -->
+                            <div>
+                                <label for="reportNotes" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Additional Notes (Optional)
+                                </label>
+                                <textarea 
+                                    id="reportNotes" 
+                                    rows="4"
+                                    placeholder="Add any additional information..."
+                                    class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition resize-none"
+                                ></textarea>
+                            </div>
+
+                            <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold btn-hover smooth-shadow">
+                                <i class="ri-save-line mr-2"></i>
+                                Upload Report
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Add Condition Form -->
+                    <div id="conditionAction" class="action-content hidden">
+                        <form id="addConditionForm" class="space-y-6">
+                            <div>
+                                <label for="conditionName" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Medical Condition *
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="conditionName" 
+                                    placeholder="e.g., Hypertension, Diabetes"
+                                    class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition"
+                                    required
+                                >
+                            </div>
+
+                            <div>
+                                <label for="conditionDiagnosed" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Date Diagnosed *
+                                </label>
+                                <input 
+                                    type="date" 
+                                    id="conditionDiagnosed" 
+                                    class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition"
+                                    required
+                                >
+                            </div>
+
+                            <div>
+                                <label for="conditionSeverity" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Severity *
+                                </label>
+                                <select 
+                                    id="conditionSeverity" 
+                                    class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition"
+                                    required
+                                >
+                                    <option value="">Select severity</option>
+                                    <option value="mild">Mild</option>
+                                    <option value="moderate">Moderate</option>
+                                    <option value="severe">Severe</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="conditionNotes" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Additional Notes
+                                </label>
+                                <textarea 
+                                    id="conditionNotes" 
+                                    rows="4"
+                                    placeholder="Treatment plan, medications, etc..."
+                                    class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition resize-none"
+                                ></textarea>
+                            </div>
+
+                            <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold btn-hover smooth-shadow">
+                                <i class="ri-add-line mr-2"></i>
+                                Add Medical Condition
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Add Allergy Form -->
+                    <div id="allergyAction" class="action-content hidden">
+                        <form id="addAllergyForm" class="space-y-6">
+                            <div>
+                                <label for="allergyName" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Allergy / Allergen *
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="allergyName" 
+                                    placeholder="e.g., Penicillin, Peanuts, Dust"
+                                    class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition"
+                                    required
+                                >
+                            </div>
+
+                            <div>
+                                <label for="allergyType" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Allergy Type *
+                                </label>
+                                <select 
+                                    id="allergyType" 
+                                    class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition"
+                                    required
+                                >
+                                    <option value="">Select type</option>
+                                    <option value="food">Food Allergy</option>
+                                    <option value="drug">Drug Allergy</option>
+                                    <option value="environmental">Environmental</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="allergySeverity" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Severity *
+                                </label>
+                                <select 
+                                    id="allergySeverity" 
+                                    class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition"
+                                    required
+                                >
+                                    <option value="">Select severity</option>
+                                    <option value="mild">Mild</option>
+                                    <option value="moderate">Moderate</option>
+                                    <option value="severe">Severe (Life-threatening)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="allergyReaction" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Reaction / Symptoms
+                                </label>
+                                <textarea 
+                                    id="allergyReaction" 
+                                    rows="4"
+                                    placeholder="Describe the allergic reaction..."
+                                    class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition resize-none"
+                                ></textarea>
+                            </div>
+
+                            <button type="submit" class="w-full bg-gradient-to-r from-red-600 to-pink-600 text-white py-4 rounded-xl font-semibold btn-hover smooth-shadow">
+                                <i class="ri-alert-line mr-2"></i>
+                                Add Allergy to Record
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-20 py-8 bg-white/80 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 text-center text-gray-600">
+            <p>&copy; 2024 HealthVault ID. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        let currentStep = 1;
+        let hospitalData = {};
+
+        // Auth Tab Switching
+        function switchAuthTab(tab) {
+            const passwordTab = document.getElementById('passwordTab');
+            const otpTab = document.getElementById('otpTab');
+            const passwordForm = document.getElementById('passwordForm');
+            const otpForm = document.getElementById('otpForm');
+
+            if (tab === 'password') {
+                passwordTab.classList.add('tab-active');
+                passwordTab.classList.remove('bg-gray-100', 'text-gray-700');
+                otpTab.classList.remove('tab-active');
+                otpTab.classList.add('bg-gray-100', 'text-gray-700');
+                passwordForm.classList.remove('hidden');
+                otpForm.classList.add('hidden');
+            } else {
+                otpTab.classList.add('tab-active');
+                otpTab.classList.remove('bg-gray-100', 'text-gray-700');
+                passwordTab.classList.remove('tab-active');
+                passwordTab.classList.add('bg-gray-100', 'text-gray-700');
+                otpForm.classList.remove('hidden');
+                passwordForm.classList.add('hidden');
+            }
+        }
+
+        // Action Tab Switching
+        function switchActionTab(action) {
+            // Update tab buttons
+            document.querySelectorAll('[id$="ActionTab"]').forEach(btn => {
+                btn.classList.remove('tab-active');
+                btn.classList.add('bg-gray-100', 'text-gray-700');
+            });
+            document.getElementById(action + 'ActionTab').classList.add('tab-active');
+            document.getElementById(action + 'ActionTab').classList.remove('bg-gray-100', 'text-gray-700');
+
+            // Show/hide content
+            document.querySelectorAll('.action-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(action + 'Action').classList.remove('hidden');
+        }
+
+        // Toggle Password Visibility
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = input.nextElementSibling.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'ri-eye-off-line text-gray-400 text-xl hover:text-gray-600';
+            } else {
+                input.type = 'password';
+                icon.className = 'ri-eye-line text-gray-400 text-xl hover:text-gray-600';
+            }
+        }
+
+        // Send OTP
+        function sendOTP() {
+            const phone = document.getElementById('hospitalPhone').value;
+            const hospitalName = document.getElementById('hospitalNameOtp').value;
+            const hospitalId = document.getElementById('hospitalIdOtp').value;
+
+            if (!hospitalName || !hospitalId || !phone) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            // Show OTP input
+            document.getElementById('otpInputSection').classList.remove('hidden');
+            document.getElementById('sendOtpBtn').disabled = true;
+            document.getElementById('sendOtpBtn').classList.add('opacity-50');
+            
+            alert('OTP sent to ' + phone + '\nDemo OTP: 123456');
+        }
+
+        // Step Navigation
+        function goToStep(step) {
+            // Hide all steps
+            document.querySelectorAll('.step-indicator').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // Show current step
+            document.getElementById('step' + step).classList.add('active');
+
+            // Update progress indicator
+            updateProgressIndicator(step);
+            
+            currentStep = step;
+        }
+
+        function updateProgressIndicator(step) {
+            for (let i = 1; i <= 3; i++) {
+                const indicator = document.getElementById('step' + i + '-indicator');
+                if (i <= step) {
+                    indicator.classList.remove('opacity-50');
+                    indicator.querySelector('div').classList.remove('bg-gray-300', 'text-gray-600');
+                    indicator.querySelector('div').classList.add('bg-indigo-600', 'text-white');
+                    indicator.querySelector('span').classList.remove('text-gray-600');
+                    indicator.querySelector('span').classList.add('text-indigo-600');
+                } else {
+                    indicator.classList.add('opacity-50');
+                }
+            }
+        }
+
+        // Password Form Submit
+        document.getElementById('passwordForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            hospitalData.name = document.getElementById('hospitalName').value;
+            hospitalData.id = document.getElementById('hospitalId').value;
+            hospitalData.password = document.getElementById('hospitalPassword').value;
+
+            // Demo validation
+            if (hospitalData.id === 'HOSP12345' && hospitalData.password === 'hospital123') {
+                alert('✓ Hospital authenticated successfully!\n\nHospital: ' + hospitalData.name);
+                goToStep(2);
+            } else {
+                alert('Invalid Hospital ID or Password\n\nDemo Credentials:\nID: HOSP12345\nPassword: hospital123');
+            }
+        });
+
+        // OTP Form Submit
+        document.getElementById('otpForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const otp = document.getElementById('otpCode').value;
+            hospitalData.name = document.getElementById('hospitalNameOtp').value;
+            hospitalData.id = document.getElementById('hospitalIdOtp').value;
+
+            if (otp === '123456') {
+                alert('✓ OTP verified successfully!\n\nHospital: ' + hospitalData.name);
+                goToStep(2);
+            } else {
+                alert('Invalid OTP\n\nDemo OTP: 123456');
+            }
+        });
+
+        // Patient ID Form Submit
+        document.getElementById('patientIdForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const patientId = document.getElementById('patientHealthId').value;
+            
+            if (patientId === 'HV123456789') {
+                hospitalData.patientId = patientId;
+                
+                // Update display
+                document.getElementById('displayHospitalName').textContent = hospitalData.name;
+                document.getElementById('displayPatientId').textContent = patientId;
+                
+                alert('✓ Patient record accessed successfully!\n\nYou can now add medical records.');
+                goToStep(3);
+            } else {
+                alert('Patient ID not found\n\nDemo Patient ID: HV123456789');
+            }
+        });
+
+        // Add Report Form Submit
+        document.getElementById('addReportForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('✓ Medical report added successfully!\n\n' +
+                  'Hospital: ' + hospitalData.name + '\n' +
+                  'Patient: ' + hospitalData.patientId + '\n' +
+                  'Report: ' + document.getElementById('reportName').value + '\n\n' +
+                  'The report has been uploaded to the patient\'s dashboard.');
+        });
+
+        // Add Condition Form Submit
+        document.getElementById('addConditionForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('✓ Medical condition added successfully!\n\n' +
+                  'Condition: ' + document.getElementById('conditionName').value + '\n' +
+                  'Severity: ' + document.getElementById('conditionSeverity').value + '\n\n' +
+                  'The condition has been added to the patient\'s medical history.');
+        });
+
+        // Add Allergy Form Submit
+        document.getElementById('addAllergyForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('✓ Allergy added successfully!\n\n' +
+                  'Allergen: ' + document.getElementById('allergyName').value + '\n' +
+                  'Severity: ' + document.getElementById('allergySeverity').value + '\n\n' +
+                  'The allergy has been added to the patient\'s record.');
+        });
+
+        // File Upload
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                alert('File selected: ' + files[0].name);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                alert('File selected: ' + e.target.files[0].name);
+            }
+        });
+
+        // Set max date to today
+        document.getElementById('reportDate').max = new Date().toISOString().split('T')[0];
+        document.getElementById('conditionDiagnosed').max = new Date().toISOString().split('T')[0];
+    </script>
+
+</body>
+</html>

@@ -1,8 +1,7 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <head>
+        <meta charset="u    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HealthVault ID - Your Digital Medical Vault</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
@@ -147,61 +146,16 @@
                 </div>
             </div>
 
-            <!-- Right Illustration -->
+            <!-- Right Image -->
             <div class="relative">
                 <div class="relative z-10 float-animation">
-                    <div class="bg-white rounded-3xl p-8 smooth-shadow">
-                        <div class="space-y-6">
-                            <!-- Profile Card Illustration -->
-                            <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                                        <i class="ri-user-line text-3xl"></i>
-                                    </div>
-                                    <div>
-                                        <div class="h-4 bg-white/30 rounded w-32 mb-2"></div>
-                                        <div class="h-3 bg-white/20 rounded w-24"></div>
-                                    </div>
-                                </div>
-                                <div class="mt-4 grid grid-cols-2 gap-4">
-                                    <div class="bg-white/10 rounded-xl p-3 backdrop-blur-sm">
-                                        <div class="h-3 bg-white/30 rounded w-16 mb-2"></div>
-                                        <div class="h-2 bg-white/20 rounded w-12"></div>
-                                    </div>
-                                    <div class="bg-white/10 rounded-xl p-3 backdrop-blur-sm">
-                                        <div class="h-3 bg-white/30 rounded w-16 mb-2"></div>
-                                        <div class="h-2 bg-white/20 rounded w-12"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Report Cards Illustration -->
-                            <div class="space-y-3">
-                                <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                                    <div class="flex justify-between items-center">
-                                        <div class="flex-1">
-                                            <div class="h-3 bg-gray-300 rounded w-40 mb-2"></div>
-                                            <div class="h-2 bg-gray-200 rounded w-32"></div>
-                                        </div>
-                                        <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
-                                            <i class="ri-file-text-line text-indigo-600"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                                    <div class="flex justify-between items-center">
-                                        <div class="flex-1">
-                                            <div class="h-3 bg-gray-300 rounded w-36 mb-2"></div>
-                                            <div class="h-2 bg-gray-200 rounded w-28"></div>
-                                        </div>
-                                        <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                                            <i class="ri-file-text-line text-purple-600"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Hero Image Placeholder -->
+                    <img 
+                        src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600&h=600&fit=crop" 
+                        alt="Medical Healthcare" 
+                        class="rounded-3xl shadow-2xl w-full h-auto object-cover"
+                        onerror="this.onerror=null; this.src='https://via.placeholder.com/600x600/667eea/ffffff?text=Healthcare+Dashboard'"
+                    >
                 </div>
                 
                 <!-- Decorative Elements -->
@@ -322,5 +276,68 @@
         </div>
     </footer>
 
+ead>
+    <body>
+        <div class="wrap">
+            <main class="card" role="main">
+                <h1>Sign in</h1>
+                <p class="lead">Please enter the ID. Only <strong>UHD</strong> is accepted.</p>
+
+                <form id="loginForm" autocomplete="off">
+                    <label for="idInput">ID</label>
+                    <input id="idInput" name="id" type="text" inputmode="text" aria-label="ID input" placeholder="Enter ID (e.g. UHD)" required />
+                    <button type="submit">Sign in</button>
+                </form>
+
+                <div id="message" class="msg" role="status" aria-live="polite"></div>
+                <p class="small">This is a local demo page — open the file in your browser to test.</p>
+            </main>
+        </div>
+
+        <script>
+            (function(){
+                const ALLOWED = 'UHD';
+                const form = document.getElementById('loginForm');
+                const input = document.getElementById('idInput');
+                const message = document.getElementById('message');
+
+                function showMessage(text, type){
+                    message.textContent = text;
+                    message.className = 'msg ' + (type === 'success' ? 'success' : 'error');
+                }
+
+                form.addEventListener('submit', function(e){
+                    e.preventDefault();
+                    const val = (input.value || '').trim();
+                    if(val === ALLOWED){
+                        showMessage('Hello, ' + ALLOWED + '!', 'success');
+                        // Optionally hide the form on success
+                        form.style.display = 'none';
+                    } else {
+                        showMessage('Invalid ID. Please enter "UHD".', 'error');
+                        input.focus();
+                    }
+                });
+
+                // Optional: allow immediate feedback while typing
+                input.addEventListener('input', function(){
+                    if(message.classList.contains('error')){
+                        message.style.display = 'none';
+                    }
+                });
+            })();
+        </script>
+    </body>
+</html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
 </body>
 </html>
