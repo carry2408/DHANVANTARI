@@ -1,37 +1,40 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../database");
+const pool = require("../database");
 
 // Get patient information
-router.get("/:healthId", (req, res) => {
+router.get("/:healthId", async (req, res) => {
   try {
-    const stmt = db.prepare(
-      "SELECT health_id, name, gender, age, phone, address FROM patients WHERE health_id = ?"
+    const result = await pool.query(
+      "SELECT health_id, name, gender, age, phone, address FROM patients WHERE health_id = $1",
+      [req.params.healthId]
     );
-    const row = stmt.get(req.params.healthId);
 
-    if (!row) return res.status(404).json({ error: "Patient not found" });
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Patient not found" });
+    }
 
-    res.json(row);
+    res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 // Update patient information
-router.put("/:healthId", (req, res) => {
+router.put("/:healthId", async (req, res) => {
   const { name, gender, age, phone, address } = req.body;
 
   try {
-    const stmt = db.prepare(
+    const result = await pool.query(
       `UPDATE patients 
-       SET name = ?, gender = ?, age = ?, phone = ?, address = ?
-       WHERE health_id = ?`
+       SET name = $1, gender = $2, age = $3, phone = $4, address = $5
+       WHERE health_id = $6`,
+      [name, gender, age, phone, address, req.params.healthId]
     );
-    const result = stmt.run(name, gender, age, phone, address, req.params.healthId);
 
-    if (result.changes === 0)
+    if (result.rowCount === 0) {
       return res.status(404).json({ error: "Patient not found" });
+    }
 
     res.json({ message: "Patient updated successfully" });
   } catch (err) {
@@ -40,42 +43,45 @@ router.put("/:healthId", (req, res) => {
 });
 
 // Get medical conditions
-router.get("/:healthId/conditions", (req, res) => {
+router.get("/:healthId/conditions", async (req, res) => {
   try {
-    const stmt = db.prepare(
-      "SELECT id, condition FROM medical_conditions WHERE health_id = ?"
+    const result = await pool.query(
+      "SELECT id, condition FROM medical_conditions WHERE health_id = $1",
+      [req.params.healthId]
     );
-    const rows = stmt.all(req.params.healthId);
-    res.json(rows);
+    res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 // Add a medical condition
-router.post("/:healthId/conditions", (req, res) => {
+router.post("/:healthId/conditions", async (req, res) => {
   const { condition } = req.body;
 
   try {
-    const stmt = db.prepare(
-      "INSERT INTO medical_conditions (health_id, condition) VALUES (?, ?)"
+    const result = await pool.query(
+      "INSERT INTO medical_conditions (health_id, condition) VALUES ($1, $2) RETURNING id",
+      [req.params.healthId, condition]
     );
-    const result = stmt.run(req.params.healthId, condition);
 
-    res.json({ message: "Condition added", id: result.lastInsertRowid });
+    res.json({ message: "Condition added", id: result.rows[0].id });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 // Delete a medical condition
-router.delete("/:healthId/conditions/:id", (req, res) => {
+router.delete("/:healthId/conditions/:id", async (req, res) => {
   try {
-    const stmt = db.prepare("DELETE FROM medical_conditions WHERE id = ?");
-    const result = stmt.run(req.params.id);
+    const result = await pool.query(
+      "DELETE FROM medical_conditions WHERE id = $1",
+      [req.params.id]
+    );
 
-    if (result.changes === 0)
+    if (result.rowCount === 0) {
       return res.status(404).json({ error: "Condition not found" });
+    }
 
     res.json({ message: "Condition deleted" });
   } catch (err) {
@@ -84,42 +90,45 @@ router.delete("/:healthId/conditions/:id", (req, res) => {
 });
 
 // Get allergies
-router.get("/:healthId/allergies", (req, res) => {
+router.get("/:healthId/allergies", async (req, res) => {
   try {
-    const stmt = db.prepare(
-      "SELECT id, allergy FROM allergies WHERE health_id = ?"
+    const result = await pool.query(
+      "SELECT id, allergy FROM allergies WHERE health_id = $1",
+      [req.params.healthId]
     );
-    const rows = stmt.all(req.params.healthId);
-    res.json(rows);
+    res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 // Add an allergy
-router.post("/:healthId/allergies", (req, res) => {
+router.post("/:healthId/allergies", async (req, res) => {
   const { allergy } = req.body;
 
   try {
-    const stmt = db.prepare(
-      "INSERT INTO allergies (health_id, allergy) VALUES (?, ?)"
+    const result = await pool.query(
+      "INSERT INTO allergies (health_id, allergy) VALUES ($1, $2) RETURNING id",
+      [req.params.healthId, allergy]
     );
-    const result = stmt.run(req.params.healthId, allergy);
 
-    res.json({ message: "Allergy added", id: result.lastInsertRowid });
+    res.json({ message: "Allergy added", id: result.rows[0].id });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 // Delete an allergy
-router.delete("/:healthId/allergies/:id", (req, res) => {
+router.delete("/:healthId/allergies/:id", async (req, res) => {
   try {
-    const stmt = db.prepare("DELETE FROM allergies WHERE id = ?");
-    const result = stmt.run(req.params.id);
+    const result = await pool.query(
+      "DELETE FROM allergies WHERE id = $1",
+      [req.params.id]
+    );
 
-    if (result.changes === 0)
+    if (result.rowCount === 0) {
       return res.status(404).json({ error: "Allergy not found" });
+    }
 
     res.json({ message: "Allergy deleted" });
   } catch (err) {

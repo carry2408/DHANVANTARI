@@ -1,0 +1,24 @@
+version: 2
+
+services:
+  - type: web
+    name: healthvault-api
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: healthvault-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: UPLOAD_PATH
+        value: ./uploads
+
+databases:
+  - name: healthvault-db
+    databaseName: healthvault
+    user: healthvault

@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../database");
+const pool = require("../database");
 const multer = require("multer");
 const path = require("path");
 
@@ -18,20 +18,20 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Get all reports for a patient
-router.get("/patient/:healthId", (req, res) => {
+router.get("/patient/:healthId", async (req, res) => {
   try {
-    const stmt = db.prepare(
-      "SELECT * FROM medical_reports WHERE health_id = ? ORDER BY date DESC"
+    const result = await pool.query(
+      "SELECT * FROM medical_reports WHERE health_id = $1 ORDER BY date DESC",
+      [req.params.healthId]
     );
-    const rows = stmt.all(req.params.healthId);
-    res.json(rows);
+    res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 // Add a new medical report
-router.post("/", upload.single("file"), (req, res) => {
+router.post("/", upload.single("file"), async (req, res) => {
   try {
     const { healthId, name, hospital, doctor, date, notes, status } = req.body;
 
@@ -39,44 +39,34 @@ router.post("/", upload.single("file"), (req, res) => {
       return res.status(400).json({ error: "File upload required" });
     }
 
-    const stmt = db.prepare(
+    const result = await pool.query(
       `INSERT INTO medical_reports 
-       (health_id, name, hospital, doctor, date, file_path, notes, status) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+       (health_id, report_name, hospital_name, doctor_name, date, file_path) 
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+      [healthId, name, hospital, doctor, date, req.file.filename]
     );
 
-    const result = stmt.run(
-      healthId,
-      name,
-      hospital,
-      doctor,
-      date,
-      req.file.filename,
-      notes || "",
-      status || "Normal"
-    );
-
-    res.json({ message: "Report added", id: result.lastInsertRowid });
+    res.json({ message: "Report added", id: result.rows[0].id });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 // Update an existing report
-router.put("/:reportId", (req, res) => {
+router.put("/:reportId", async (req, res) => {
   try {
-    const { name, hospital, doctor, date, notes, status } = req.body;
+    const { name, hospital, doctor, date } = req.body;
 
-    const stmt = db.prepare(
+    const result = await pool.query(
       `UPDATE medical_reports 
-       SET name = ?, hospital = ?, doctor = ?, date = ?, notes = ?, status = ?
-       WHERE id = ?`
+       SET report_name = $1, hospital_name = $2, doctor_name = $3, date = $4
+       WHERE id = $5`,
+      [name, hospital, doctor, date, req.params.reportId]
     );
 
-    const result = stmt.run(name, hospital, doctor, date, notes, status, req.params.reportId);
-
-    if (result.changes === 0)
+    if (result.rowCount === 0) {
       return res.status(404).json({ error: "Report not found" });
+    }
 
     res.json({ message: "Report updated" });
   } catch (err) {
@@ -85,13 +75,16 @@ router.put("/:reportId", (req, res) => {
 });
 
 // Delete a report
-router.delete("/:reportId", (req, res) => {
+router.delete("/:reportId", async (req, res) => {
   try {
-    const stmt = db.prepare("DELETE FROM medical_reports WHERE id = ?");
-    const result = stmt.run(req.params.reportId);
+    const result = await pool.query(
+      "DELETE FROM medical_reports WHERE id = $1",
+      [req.params.reportId]
+    );
 
-    if (result.changes === 0)
+    if (result.rowCount === 0) {
       return res.status(404).json({ error: "Report not found" });
+    }
 
     res.json({ message: "Report deleted" });
   } catch (err) {

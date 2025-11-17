@@ -1,22 +1,26 @@
-const Database = require("better-sqlite3");
-const path = require("path");
+const { Pool } = require("pg");
 require("dotenv").config();
 
-// Resolve database path correctly
-const dbPath = path.resolve(__dirname, process.env.DATABASE_PATH);
+// PostgreSQL connection pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false
+});
 
-// Connect to SQLite using better-sqlite3
-let db;
+// Test connection
+pool.connect((err, client, release) => {
+  if (err) {
+    console.error("❌ Failed to connect to PostgreSQL database:", err.message);
+    process.exit(1);
+  }
+  console.log("✅ Connected to PostgreSQL database");
+  release();
+});
 
-try {
-  db = new Database(dbPath, {
-    verbose: console.log,  // optional: logs SQL statements
-  });
+// Handle pool errors
+pool.on("error", (err) => {
+  console.error("Unexpected error on idle client", err);
+  process.exit(-1);
+});
 
-  console.log("📁 Connected to SQLite database using better-sqlite3:", dbPath);
-} catch (err) {
-  console.error("❌ Failed to connect to database:", err.message);
-  process.exit(1);
-}
-
-module.exports = db;
+module.exports = pool;

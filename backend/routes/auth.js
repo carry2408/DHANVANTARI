@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../database");
+const pool = require("../database");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
@@ -10,17 +10,25 @@ function createToken(payload) {
 }
 
 // 🧍 Patient Login
-router.post("/patient/login", (req, res) => {
+router.post("/patient/login", async (req, res) => {
   const { healthId, password } = req.body;
 
   try {
-    const stmt = db.prepare("SELECT * FROM patients WHERE health_id = ?");
-    const user = stmt.get(healthId);
+    const result = await pool.query(
+      "SELECT * FROM patients WHERE health_id = $1",
+      [healthId]
+    );
 
-    if (!user) return res.status(404).json({ error: "Patient not found" });
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Patient not found" });
+    }
 
-    const valid = bcrypt.compareSync(password, user.password);
-    if (!valid) return res.status(401).json({ error: "Invalid password" });
+    const user = result.rows[0];
+    const valid = await bcrypt.compare(password, user.password);
+    
+    if (!valid) {
+      return res.status(401).json({ error: "Invalid password" });
+    }
 
     const token = createToken({ healthId: user.health_id });
 
@@ -31,18 +39,25 @@ router.post("/patient/login", (req, res) => {
 });
 
 // 🏥 Hospital Login
-router.post("/hospital/login", (req, res) => {
+router.post("/hospital/login", async (req, res) => {
   const { hospitalId, password } = req.body;
 
   try {
-    const stmt = db.prepare("SELECT * FROM hospitals WHERE hospital_id = ?");
-    const hospital = stmt.get(hospitalId);
+    const result = await pool.query(
+      "SELECT * FROM hospitals WHERE hospital_id = $1",
+      [hospitalId]
+    );
 
-    if (!hospital)
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: "Hospital not found" });
+    }
 
-    const valid = bcrypt.compareSync(password, hospital.password);
-    if (!valid) return res.status(401).json({ error: "Invalid password" });
+    const hospital = result.rows[0];
+    const valid = await bcrypt.compare(password, hospital.password);
+    
+    if (!valid) {
+      return res.status(401).json({ error: "Invalid password" });
+    }
 
     const token = createToken({ hospitalId: hospital.hospital_id });
 
@@ -53,18 +68,25 @@ router.post("/hospital/login", (req, res) => {
 });
 
 // 👨‍⚕️ Doctor Login
-router.post("/doctor/login", (req, res) => {
+router.post("/doctor/login", async (req, res) => {
   const { doctorId, password } = req.body;
 
   try {
-    const stmt = db.prepare("SELECT * FROM doctor_logins WHERE doctor_id = ?");
-    const doctor = stmt.get(doctorId);
+    const result = await pool.query(
+      "SELECT * FROM doctor_logins WHERE doctor_id = $1",
+      [doctorId]
+    );
 
-    if (!doctor)
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: "Doctor not found" });
+    }
 
-    const valid = bcrypt.compareSync(password, doctor.password);
-    if (!valid) return res.status(401).json({ error: "Invalid password" });
+    const doctor = result.rows[0];
+    const valid = await bcrypt.compare(password, doctor.password);
+    
+    if (!valid) {
+      return res.status(401).json({ error: "Invalid password" });
+    }
 
     const token = createToken({ doctorId: doctor.doctor_id });
 
