@@ -4,84 +4,74 @@ const db = require("../database");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-// Patient Login
+// 🔐 Helper: Create JWT token
+function createToken(payload) {
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "24h" });
+}
+
+// 🧍 Patient Login
 router.post("/patient/login", (req, res) => {
   const { healthId, password } = req.body;
 
-  db.get(
-    "SELECT * FROM patients WHERE health_id = ?",
-    [healthId],
-    (err, user) => {
-      if (err) return res.status(500).json({ error: err.message });
-      if (!user) return res.status(404).json({ error: "Patient not found" });
+  try {
+    const stmt = db.prepare("SELECT * FROM patients WHERE health_id = ?");
+    const user = stmt.get(healthId);
 
-      bcrypt.compare(password, user.password, (err, result) => {
-        if (!result)
-          return res.status(401).json({ error: "Invalid password" });
+    if (!user) return res.status(404).json({ error: "Patient not found" });
 
-        const token = jwt.sign({ healthId: user.health_id }, process.env.JWT_SECRET, {
-          expiresIn: "24h",
-        });
+    const valid = bcrypt.compareSync(password, user.password);
+    if (!valid) return res.status(401).json({ error: "Invalid password" });
 
-        res.json({ message: "Login successful", token });
-      });
-    }
-  );
+    const token = createToken({ healthId: user.health_id });
+
+    res.json({ message: "Login successful", token });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Hospital Login
+// 🏥 Hospital Login
 router.post("/hospital/login", (req, res) => {
   const { hospitalId, password } = req.body;
 
-  db.get(
-    "SELECT * FROM hospitals WHERE hospital_id = ?",
-    [hospitalId],
-    (err, hospital) => {
-      if (err) return res.status(500).json({ error: err.message });
-      if (!hospital)
-        return res.status(404).json({ error: "Hospital not found" });
+  try {
+    const stmt = db.prepare("SELECT * FROM hospitals WHERE hospital_id = ?");
+    const hospital = stmt.get(hospitalId);
 
-      bcrypt.compare(password, hospital.password, (err, result) => {
-        if (!result)
-          return res.status(401).json({ error: "Invalid password" });
+    if (!hospital)
+      return res.status(404).json({ error: "Hospital not found" });
 
-        const token = jwt.sign(
-          { hospitalId: hospital.hospital_id },
-          process.env.JWT_SECRET,
-          { expiresIn: "24h" }
-        );
+    const valid = bcrypt.compareSync(password, hospital.password);
+    if (!valid) return res.status(401).json({ error: "Invalid password" });
 
-        res.json({ message: "Login successful", token });
-      });
-    }
-  );
+    const token = createToken({ hospitalId: hospital.hospital_id });
+
+    res.json({ message: "Login successful", token });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Doctor Login
+// 👨‍⚕️ Doctor Login
 router.post("/doctor/login", (req, res) => {
   const { doctorId, password } = req.body;
 
-  db.get(
-    "SELECT * FROM doctor_logins WHERE doctor_id = ?",
-    [doctorId],
-    (err, doctor) => {
-      if (err) return res.status(500).json({ error: err.message });
-      if (!doctor) return res.status(404).json({ error: "Doctor not found" });
+  try {
+    const stmt = db.prepare("SELECT * FROM doctor_logins WHERE doctor_id = ?");
+    const doctor = stmt.get(doctorId);
 
-      bcrypt.compare(password, doctor.password, (err, result) => {
-        if (!result)
-          return res.status(401).json({ error: "Invalid password" });
+    if (!doctor)
+      return res.status(404).json({ error: "Doctor not found" });
 
-        const token = jwt.sign(
-          { doctorId: doctor.doctor_id },
-          process.env.JWT_SECRET,
-          { expiresIn: "24h" }
-        );
+    const valid = bcrypt.compareSync(password, doctor.password);
+    if (!valid) return res.status(401).json({ error: "Invalid password" });
 
-        res.json({ message: "Login successful", token });
-      });
-    }
-  );
+    const token = createToken({ doctorId: doctor.doctor_id });
+
+    res.json({ message: "Login successful", token });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;

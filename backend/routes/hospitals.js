@@ -4,30 +4,32 @@ const db = require("../database");
 
 // Get all hospitals
 router.get("/", (req, res) => {
-  db.all(
-    "SELECT hospital_id, name, address FROM hospitals",
-    [],
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json(rows);
-    }
-  );
+  try {
+    const stmt = db.prepare(
+      "SELECT hospital_id, name, address FROM hospitals"
+    );
+    const rows = stmt.all();
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Get hospital by ID
+// Get a specific hospital
 router.get("/:hospitalId", (req, res) => {
-  const { hospitalId } = req.params;
+  try {
+    const stmt = db.prepare(
+      "SELECT hospital_id, name, address FROM hospitals WHERE hospital_id = ?"
+    );
+    const row = stmt.get(req.params.hospitalId);
 
-  db.get(
-    "SELECT hospital_id, name, address FROM hospitals WHERE hospital_id = ?",
-    [hospitalId],
-    (err, row) => {
-      if (err) return res.status(500).json({ error: err.message });
-      if (!row) return res.status(404).json({ error: "Hospital not found" });
+    if (!row)
+      return res.status(404).json({ error: "Hospital not found" });
 
-      res.json(row);
-    }
-  );
+    res.json(row);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;

@@ -1,135 +1,121 @@
-const db = require("./database");
-const bcrypt = require("bcrypt");
+const Database = require("better-sqlite3");
+const path = require("path");
+require("dotenv").config();
 
-console.log("🔄 Initializing database schema...");
+const dbPath = path.resolve(__dirname, process.env.DATABASE_PATH);
+const db = new Database(dbPath);
 
-db.serialize(() => {
-  // Patients Table
-  db.run(`
+console.log("🔄 Initializing database...");
+
+// TABLE CREATION
+try {
+  db.prepare(`
     CREATE TABLE IF NOT EXISTS patients (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      health_id TEXT UNIQUE NOT NULL,
-      name TEXT NOT NULL,
+      health_id TEXT PRIMARY KEY,
+      name TEXT,
       gender TEXT,
       age INTEGER,
       phone TEXT,
       address TEXT,
-      password TEXT NOT NULL
-    );
-  `);
+      password TEXT
+    )
+  `).run();
 
-  // Medical Conditions Table
-  db.run(`
+  db.prepare(`
     CREATE TABLE IF NOT EXISTS medical_conditions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      health_id TEXT NOT NULL,
-      condition TEXT NOT NULL,
-      FOREIGN KEY (health_id) REFERENCES patients(health_id)
-    );
-  `);
+      health_id TEXT,
+      condition TEXT
+    )
+  `).run();
 
-  // Allergies Table
-  db.run(`
+  db.prepare(`
     CREATE TABLE IF NOT EXISTS allergies (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      health_id TEXT NOT NULL,
-      allergy TEXT NOT NULL,
-      FOREIGN KEY (health_id) REFERENCES patients(health_id)
-    );
-  `);
+      health_id TEXT,
+      allergy TEXT
+    )
+  `).run();
 
-  // Hospitals Table
-  db.run(`
+  db.prepare(`
     CREATE TABLE IF NOT EXISTS hospitals (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      hospital_id TEXT UNIQUE NOT NULL,
-      name TEXT NOT NULL,
+      hospital_id TEXT PRIMARY KEY,
+      name TEXT,
       address TEXT,
-      password TEXT NOT NULL
-    );
-  `);
+      password TEXT
+    )
+  `).run();
 
-  // Medical Reports Table
-  db.run(`
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS doctor_logins (
+      doctor_id TEXT PRIMARY KEY,
+      password TEXT
+    )
+  `).run();
+
+  db.prepare(`
     CREATE TABLE IF NOT EXISTS medical_reports (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      health_id TEXT NOT NULL,
-      title TEXT NOT NULL,
-      description TEXT,
-      file_path TEXT,
+      health_id TEXT,
+      report_name TEXT,
+      doctor_name TEXT,
+      hospital_name TEXT,
       date TEXT,
-      FOREIGN KEY (health_id) REFERENCES patients(health_id)
-    );
-  `);
+      file_path TEXT
+    )
+  `).run();
 
-  // Doctor Login Table
-  db.run(`
-    CREATE TABLE IF NOT EXISTS doctor_logins (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      doctor_id TEXT UNIQUE NOT NULL,
-      password TEXT NOT NULL
-    );
-  `);
+  console.log("✅ Tables created successfully!");
 
-  console.log("✓ All tables created");
+} catch (err) {
+  console.error("❌ Error creating tables:", err.message);
+}
 
-  console.log("\n🔄 Inserting sample data...");
+// SAMPLE DATA
+try {
+  // Patient
+  db.prepare(`
+    INSERT OR IGNORE INTO patients (health_id, name, gender, age, phone, address, password)
+    VALUES ('HV123456789', 'John Doe', 'Male', 34, '9876543210', 'New York', '$2b$10$eJv9lGf8gZq7bN2PwIt8B.z4GJxk4I8BxHh3uQKENqJT9n05Nd3P6')
+  `).run();
 
-  // Insert sample patient
-  bcrypt.hash("patient123", 10, (err, hash) => {
-    db.run(
-      `INSERT OR IGNORE INTO patients (health_id, name, gender, age, phone, address, password)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      ["HV123456789", "John Doe", "Male", 30, "9876543210", "Sample City", hash]
-    );
-  });
+  // Medical Condition
+  db.prepare(`
+    INSERT OR IGNORE INTO medical_conditions (health_id, condition)
+    VALUES ('HV123456789', 'Hypertension')
+  `).run();
 
-  // Insert sample medical condition
-  db.run(
-    `INSERT OR IGNORE INTO medical_conditions (health_id, condition)
-     VALUES ("HV123456789", "Diabetes")`
-  );
+  // Allergy
+  db.prepare(`
+    INSERT OR IGNORE INTO allergies (health_id, allergy)
+    VALUES ('HV123456789', 'Peanuts')
+  `).run();
 
-  // Insert sample allergy
-  db.run(
-    `INSERT OR IGNORE INTO allergies (health_id, allergy)
-     VALUES ("HV123456789", "Peanuts")`
-  );
+  // Hospital
+  db.prepare(`
+    INSERT OR IGNORE INTO hospitals (hospital_id, name, address, password)
+    VALUES ('HOSP12345', 'City General Hospital', 'Main Road', '$2b$10$0Uj9PRR7dBEz0FgVtUchOuQjPPAVWl7ASnbM8gbKzFXWWx4IpHq6a')
+  `).run();
 
-  // Insert sample hospital
-  bcrypt.hash("hospital123", 10, (err, hash) => {
-    db.run(
-      `INSERT OR IGNORE INTO hospitals (hospital_id, name, address, password)
-       VALUES (?, ?, ?, ?)`,
-      ["HOSP12345", "City General Hospital", "Main Street", hash]
-    );
-  });
+  // Doctor Login
+  db.prepare(`
+    INSERT OR IGNORE INTO doctor_logins (doctor_id, password)
+    VALUES ('DOC999', '$2b$10$Q1yY0xejP2wArMRR8pN0EOf1C.9iUoEMrAwt8pYzW8qgX2HFqRS4C')
+  `).run();
 
-  // Insert sample doctor login
-  bcrypt.hash("doctor123", 10, (err, hash) => {
-    db.run(
-      `INSERT OR IGNORE INTO doctor_logins (doctor_id, password)
-       VALUES (?, ?)`,
-      ["DOC999", hash]
-    );
-  });
+  // Reports
+  db.prepare(`
+    INSERT OR IGNORE INTO medical_reports
+    (health_id, report_name, doctor_name, hospital_name, date, file_path)
+    VALUES 
+    ('HV123456789', 'Blood Test', 'Dr. Sarah', 'City Hospital', '2024-01-10', 'sample1.pdf'),
+    ('HV123456789', 'X-Ray Chest', 'Dr. John', 'Health Center', '2024-02-14', 'sample2.png')
+  `).run();
 
-  // Insert sample reports
-  db.run(
-    `INSERT OR IGNORE INTO medical_reports (health_id, title, description, file_path, date)
-     VALUES ("HV123456789", "Blood Test", "Normal ranges", NULL, "2024-01-01")`
-  );
-  db.run(
-    `INSERT OR IGNORE INTO medical_reports (health_id, title, description, file_path, date)
-     VALUES ("HV123456789", "X-Ray", "Chest clear", NULL, "2024-02-10")`
-  );
+  console.log("✅ Sample data inserted!");
 
-  console.log("\n✅ Database initialization complete!");
+} catch (err) {
+  console.error("❌ Error inserting sample data:", err.message);
+}
 
-  console.log(`
-📋 Login Credentials:
-   Patient: HV123456789 / patient123
-   Hospital: HOSP12345 / hospital123
-   Doctor: DOC999 / doctor123
-  `);
-});
+console.log("🎉 Database initialization complete!");

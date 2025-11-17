@@ -4,92 +4,99 @@ const db = require("../database");
 const multer = require("multer");
 const path = require("path");
 
-// File storage settings
+// File upload configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads");
+    cb(null, process.env.UPLOAD_PATH || "./uploads");
   },
   filename: (req, file, cb) => {
-    const uniqueName =
-      Date.now() + "-" + Math.round(Math.random() * 1e9) + path.extname(file.originalname);
-    cb(null, uniqueName);
-  },
+    const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, unique + path.extname(file.originalname));
+  }
 });
 
 const upload = multer({ storage });
 
 // Get all reports for a patient
 router.get("/patient/:healthId", (req, res) => {
-  const { healthId } = req.params;
-
-  db.all(
-    "SELECT * FROM medical_reports WHERE health_id = ?",
-    [healthId],
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json(rows);
-    }
-  );
+  try {
+    const stmt = db.prepare(
+      "SELECT * FROM medical_reports WHERE health_id = ? ORDER BY date DESC"
+    );
+    const rows = stmt.all(req.params.healthId);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Add a report (with file upload)
+// Add a new medical report
 router.post("/", upload.single("file"), (req, res) => {
-  const { healthId, title, description, date } = req.body;
-  const file_path = req.file ? req.file.filename : null;
+  try {
+    const { healthId, name, hospital, doctor, date, notes, status } = req.body;
 
-  db.run(
-    `INSERT INTO medical_reports (health_id, title, description, file_path, date)
-     VALUES (?, ?, ?, ?, ?)`,
-    [healthId, title, description, file_path, date],
-    function (err) {
-      if (err) return res.status(500).json({ error: err.message });
-
-      res.json({
-        message: "Report added",
-        id: this.lastID,
-        file: file_path,
-      });
+    if (!req.file) {
+      return res.status(400).json({ error: "File upload required" });
     }
-  );
+
+    const stmt = db.prepare(
+      `INSERT INTO medical_reports 
+       (health_id, name, hospital, doctor, date, file_path, notes, status) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    );
+
+    const result = stmt.run(
+      healthId,
+      name,
+      hospital,
+      doctor,
+      date,
+      req.file.filename,
+      notes || "",
+      status || "Normal"
+    );
+
+    res.json({ message: "Report added", id: result.lastInsertRowid });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Update report details
+// Update an existing report
 router.put("/:reportId", (req, res) => {
-  const { reportId } = req.params;
-  const { title, description, date } = req.body;
+  try {
+    const { name, hospital, doctor, date, notes, status } = req.body;
 
-  db.run(
-    `UPDATE medical_reports
-     SET title = ?, description = ?, date = ?
-     WHERE id = ?`,
-    [title, description, date, reportId],
-    function (err) {
-      if (err) return res.status(500).json({ error: err.message });
+    const stmt = db.prepare(
+      `UPDATE medical_reports 
+       SET name = ?, hospital = ?, doctor = ?, date = ?, notes = ?, status = ?
+       WHERE id = ?`
+    );
 
-      if (this.changes === 0)
-        return res.status(404).json({ error: "Report not found" });
+    const result = stmt.run(name, hospital, doctor, date, notes, status, req.params.reportId);
 
-      res.json({ message: "Report updated successfully" });
-    }
-  );
+    if (result.changes === 0)
+      return res.status(404).json({ error: "Report not found" });
+
+    res.json({ message: "Report updated" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Delete a report
 router.delete("/:reportId", (req, res) => {
-  const { reportId } = req.params;
+  try {
+    const stmt = db.prepare("DELETE FROM medical_reports WHERE id = ?");
+    const result = stmt.run(req.params.reportId);
 
-  db.run(
-    `DELETE FROM medical_reports WHERE id = ?`,
-    [reportId],
-    function (err) {
-      if (err) return res.status(500).json({ error: err.message });
+    if (result.changes === 0)
+      return res.status(404).json({ error: "Report not found" });
 
-      if (this.changes === 0)
-        return res.status(404).json({ error: "Report not found" });
-
-      res.json({ message: "Report deleted" });
-    }
-  );
+    res.json({ message: "Report deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;
