@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Medical Report - HealthVault ID</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        secondary: '#8b5cf6',
+                        accent: '#06b6d4',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .smooth-shadow {
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .btn-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .upload-area {
+            border: 2px dashed #cbd5e1;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area.dragover {
+            border-color: #6366f1;
+            background-color: #eef2ff;
+        }
+
+        .file-preview {
+            display: none;
+        }
+
+        .file-preview.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-purple-50 to-teal-50 min-h-screen">
+    
+    <!-- Navbar -->
+    <nav class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="index.html" class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+                        <i class="ri-heart-pulse-fill text-white text-xl"></i>
+                    </div>
+                    <span class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                        HealthVault ID
+                    </span>
+                </a>
+                <div class="flex items-center space-x-4">
+                    <a href="dashboard.html" class="text-gray-700 hover:text-indigo-600 transition flex items-center">
+                        <i class="ri-arrow-left-line mr-2"></i>
+                        Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="fade-in">
+            
+            <!-- Header -->
+            <div class="mb-8">
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Add Medical Report</h1>
+                <p class="text-gray-600">Upload and store your medical documents securely</p>
+            </div>
+
+            <!-- Form Card -->
+            <div class="bg-white rounded-3xl p-8 md:p-12 smooth-shadow">
+                
+                <form id="addReportForm" class="space-y-8">
+                    
+                    <!-- File Upload Section -->
+                    <div>
+                        <label class="block text-lg font-semibold text-gray-900 mb-4">
+                            Upload Medical Document
+                        </label>
+                        
+                        <!-- Upload Area -->
+                        <div id="uploadArea" class="upload-area rounded-2xl p-12 text-center cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
+                            <input type="file" id="fileInput" class="hidden" accept=".pdf,.jpg,.jpeg,.png" />
+                            <div id="uploadPrompt">
+                                <div class="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                                    <i class="ri-upload-cloud-2-line text-white text-4xl"></i>
+                                </div>
+                                <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                                    Drop your file here or click to browse
+                                </h3>
+                                <p class="text-gray-600 mb-4">
+                                    Supports PDF, JPG, PNG (Max 10MB)
+                                </p>
+                                <button type="button" onclick="document.getElementById('fileInput').click()" class="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition">
+                                    <i class="ri-folder-open-line mr-2"></i>
+                                    Choose File
+                                </button>
+                            </div>
+
+                            <!-- File Preview -->
+                            <div id="filePreview" class="file-preview">
+                                <div class="flex items-center justify-between bg-indigo-50 rounded-xl p-6">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="w-16 h-16 bg-indigo-600 rounded-xl flex items-center justify-center">
+                                            <i id="fileIcon" class="ri-file-text-line text-white text-3xl"></i>
+                                        </div>
+                                        <div class="text-left">
+                                            <p id="fileName" class="font-semibold text-gray-900 text-lg"></p>
+                                            <p id="fileSize" class="text-gray-600 text-sm"></p>
+                                        </div>
+                                    </div>
+                                    <button type="button" onclick="removeFile()" class="text-red-600 hover:text-red-700 transition">
+                                        <i class="ri-close-circle-line text-3xl"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Report Details -->
+                    <div class="grid md:grid-cols-2 gap-6">
+                        
+                        <!-- Report Name -->
+                        <div>
+                            <label for="reportName" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Report Name *
+                            </label>
+                            <input 
+                                type="text" 
+                                id="reportName" 
+                                placeholder="e.g., Blood Test Report"
+                                class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition text-gray-900"
+                                required
+                            >
+                        </div>
+
+                        <!-- Date -->
+                        <div>
+                            <label for="reportDate" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Report Date *
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <i class="ri-calendar-line text-gray-400 text-xl"></i>
+                                </div>
+                                <input 
+                                    type="date" 
+                                    id="reportDate" 
+                                    class="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition text-gray-900"
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Hospital and Doctor Details -->
+                    <div class="grid md:grid-cols-2 gap-6">
+                        
+                        <!-- Hospital Name -->
+                        <div>
+                            <label for="hospitalName" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Hospital/Clinic Name *
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <i class="ri-hospital-line text-gray-400 text-xl"></i>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    id="hospitalName" 
+                                    placeholder="e.g., City General Hospital"
+                                    class="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition text-gray-900"
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Doctor Name -->
+                        <div>
+                            <label for="doctorName" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Doctor Name *
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <i class="ri-stethoscope-line text-gray-400 text-xl"></i>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    id="doctorName" 
+                                    placeholder="e.g., Dr. Sarah Johnson"
+                                    class="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition text-gray-900"
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Additional Notes -->
+                    <div>
+                        <label for="notes" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Additional Notes (Optional)
+                        </label>
+                        <textarea 
+                            id="notes" 
+                            rows="4"
+                            placeholder="Add any additional information about this report..."
+                            class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition text-gray-900 resize-none"
+                        ></textarea>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="border-t border-gray-200 my-8"></div>
+
+                    <!-- AI Summary Section -->
+                    <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-6 border-2 border-purple-200">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="ri-ai-generate text-white text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900 mb-2">AI-Powered Summary</h3>
+                                <p class="text-gray-700 mb-4">
+                                    Our AI will automatically analyze your report and generate an easy-to-understand summary with key insights and recommendations.
+                                </p>
+                                <div class="flex items-center space-x-2 text-sm text-purple-700">
+                                    <i class="ri-information-line"></i>
+                                    <span class="font-semibold">This feature will be activated after upload</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                        <button 
+                            type="submit"
+                            class="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg btn-hover smooth-shadow flex items-center justify-center space-x-2"
+                        >
+                            <i class="ri-upload-2-line text-xl"></i>
+                            <span>Upload & Generate AI Summary</span>
+                        </button>
+                        <a 
+                            href="dashboard.html"
+                            class="flex-1 sm:flex-initial bg-white text-gray-700 py-4 px-8 rounded-xl font-semibold border-2 border-gray-300 hover:bg-gray-50 transition flex items-center justify-center"
+                        >
+                            <i class="ri-close-line mr-2"></i>
+                            Cancel
+                        </a>
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-20 py-8 bg-white/80 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 text-center text-gray-600">
+            <p>&copy; 2024 HealthVault ID. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Check if user has edit access
+        const editMode = sessionStorage.getItem('editMode') === 'true';
+        if (!editMode) {
+            alert('You do not have permission to add reports.');
+            window.location.href = 'dashboard.html';
+        }
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadPrompt = document.getElementById('uploadPrompt');
+        const filePreview = document.getElementById('filePreview');
+        let selectedFile = null;
+
+        // Make upload area clickable
+        uploadArea.addEventListener('click', () => {
+            if (!selectedFile) {
+                fileInput.click();
+            }
+        });
+
+        // Drag and drop functionality
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        // Handle file selection
+        function handleFile(file) {
+            // Check file size (10MB limit)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File size must be less than 10MB');
+                return;
+            }
+
+            // Check file type
+            const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('Only PDF, JPG, and PNG files are allowed');
+                return;
+            }
+
+            selectedFile = file;
+            displayFilePreview(file);
+        }
+
+        // Display file preview
+        function displayFilePreview(file) {
+            uploadPrompt.style.display = 'none';
+            filePreview.classList.add('active');
+
+            // Update file info
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+
+            // Update icon based on file type
+            const fileIcon = document.getElementById('fileIcon');
+            if (file.type === 'application/pdf') {
+                fileIcon.className = 'ri-file-pdf-line text-white text-3xl';
+            } else {
+                fileIcon.className = 'ri-image-line text-white text-3xl';
+            }
+        }
+
+        // Remove file
+        function removeFile() {
+            selectedFile = null;
+            fileInput.value = '';
+            uploadPrompt.style.display = 'block';
+            filePreview.classList.remove('active');
+        }
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // Form submission
+        document.getElementById('addReportForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            if (!selectedFile) {
+                alert('Please upload a file');
+                return;
+            }
+
+            const formData = {
+                file: selectedFile.name,
+                reportName: document.getElementById('reportName').value,
+                reportDate: document.getElementById('reportDate').value,
+                hospitalName: document.getElementById('hospitalName').value,
+                doctorName: document.getElementById('doctorName').value,
+                notes: document.getElementById('notes').value
+            };
+
+            // Show success message
+            alert('Report uploaded successfully! AI summary will be generated shortly.');
+            
+            // Redirect to dashboard
+            window.location.href = 'dashboard.html';
+        });
+
+        // Set max date to today
+        document.getElementById('reportDate').max = new Date().toISOString().split('T')[0];
+    </script>
+
+</body>
+</html>

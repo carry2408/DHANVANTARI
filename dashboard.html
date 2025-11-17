@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Dashboard - HealthVault ID</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        secondary: '#8b5cf6',
+                        accent: '#06b6d4',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .smooth-shadow {
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.1);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .floating-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 50;
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4);
+        }
+
+        .floating-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 40px rgba(139, 92, 246, 0.5);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-purple-50 to-teal-50 min-h-screen">
+    
+    <!-- Navbar -->
+    <nav class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="index.html" class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+                        <i class="ri-heart-pulse-fill text-white text-xl"></i>
+                    </div>
+                    <span class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                        HealthVault ID
+                    </span>
+                </a>
+                <div class="flex items-center space-x-4">
+                    <button onclick="logout()" class="text-gray-700 hover:text-red-600 transition flex items-center">
+                        <i class="ri-logout-box-line mr-2"></i>
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="fade-in">
+            
+            <!-- Header -->
+            <div class="mb-8">
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Patient Dashboard</h1>
+                <p class="text-gray-600">View and manage medical records</p>
+            </div>
+
+            <!-- Profile Card -->
+            <div class="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-3xl p-8 mb-8 smooth-shadow text-white">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between">
+                    
+                    <!-- Profile Info -->
+                    <div class="flex items-center space-x-6 mb-6 md:mb-0">
+                        <div class="w-24 h-24 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                            <i class="ri-user-line text-5xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-3xl font-bold mb-2" id="patientName">John Doe</h2>
+                            <p class="text-white/80 text-lg flex items-center" id="healthIdDisplay">
+                                <i class="ri-fingerprint-line mr-2"></i>
+                                Health ID: <span class="font-semibold ml-2">HV123456789</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
+                            <p class="text-white/70 text-sm mb-1">Age</p>
+                            <p class="text-2xl font-bold" id="patientAge">34 years</p>
+                        </div>
+                        <div class="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
+                            <p class="text-white/70 text-sm mb-1">Gender</p>
+                            <p class="text-2xl font-bold" id="patientGender">Male</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Medical Info -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-white/20">
+                    <div>
+                        <p class="text-white/70 text-sm mb-1">Blood Group</p>
+                        <p class="text-xl font-semibold flex items-center">
+                            <i class="ri-drop-line mr-2"></i>
+                            <span id="bloodGroup">O+</span>
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-white/70 text-sm mb-1">Height</p>
+                        <p class="text-xl font-semibold" id="height">175 cm</p>
+                    </div>
+                    <div>
+                        <p class="text-white/70 text-sm mb-1">Weight</p>
+                        <p class="text-xl font-semibold" id="weight">70 kg</p>
+                    </div>
+                    <div>
+                        <p class="text-white/70 text-sm mb-1">BMI</p>
+                        <p class="text-xl font-semibold" id="bmi">22.9</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medical Conditions & Allergies -->
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+                
+                <!-- Allergies -->
+                <div class="bg-white rounded-2xl p-6 smooth-shadow">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-gray-900 flex items-center">
+                            <i class="ri-alert-line text-red-500 mr-2"></i>
+                            Allergies
+                        </h3>
+                    </div>
+                    <div class="space-y-2" id="allergiesList">
+                        <div class="badge bg-red-50 text-red-700">
+                            <i class="ri-close-circle-line mr-1"></i>
+                            Penicillin
+                        </div>
+                        <div class="badge bg-red-50 text-red-700">
+                            <i class="ri-close-circle-line mr-1"></i>
+                            Peanuts
+                        </div>
+                        <div class="badge bg-red-50 text-red-700">
+                            <i class="ri-close-circle-line mr-1"></i>
+                            Dust
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Medical Conditions -->
+                <div class="bg-white rounded-2xl p-6 smooth-shadow">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-gray-900 flex items-center">
+                            <i class="ri-health-book-line text-indigo-600 mr-2"></i>
+                            Medical Conditions
+                        </h3>
+                    </div>
+                    <div class="space-y-2" id="conditionsList">
+                        <div class="badge bg-blue-50 text-blue-700">
+                            <i class="ri-checkbox-circle-line mr-1"></i>
+                            Hypertension
+                        </div>
+                        <div class="badge bg-blue-50 text-blue-700">
+                            <i class="ri-checkbox-circle-line mr-1"></i>
+                            Type 2 Diabetes
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Reports Section -->
+            <div class="mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+                        <i class="ri-file-list-3-line text-indigo-600 mr-3"></i>
+                        Medical Reports
+                    </h2>
+                    <div class="flex items-center space-x-2 text-gray-600">
+                        <i class="ri-file-line"></i>
+                        <span id="reportCount" class="font-semibold">5 Reports</span>
+                    </div>
+                </div>
+
+                <!-- Reports Grid -->
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="reportsList">
+                    
+                    <!-- Report Card 1 -->
+                    <div class="bg-white rounded-2xl p-6 smooth-shadow card-hover">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                                <i class="ri-test-tube-line text-white text-xl"></i>
+                            </div>
+                            <span class="badge bg-green-50 text-green-700">
+                                <i class="ri-check-line mr-1"></i>
+                                Normal
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">Complete Blood Count</h3>
+                        <div class="space-y-2 mb-4">
+                            <p class="text-sm text-gray-600 flex items-center">
+                                <i class="ri-hospital-line mr-2 text-gray-400"></i>
+                                City General Hospital
+                            </p>
+                            <p class="text-sm text-gray-600 flex items-center">
+                                <i class="ri-stethoscope-line mr-2 text-gray-400"></i>
+                                Dr. Sarah Johnson
+                            </p>
+                            <p class="text-sm text-gray-600 flex items-center">
+                                <i class="ri-calendar-line mr-2 text-gray-400"></i>
+                                January 15, 2024
+                            </p>
+                        </div>
+                        <button class="w-full bg-indigo-50 text-indigo-600 py-3 rounded-xl font-semibold hover:bg-indigo-100 transition flex items-center justify-center">
+                            <i class="ri-eye-line mr-2"></i>
+                            View Report
+                        </button>
+                    </div>
+
+                    <!-- Report Card 2 -->
+                    <div class="bg-white rounded-2xl p-6 smooth-shadow card-hover">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                                <i class="ri-heart-pulse-line text-white text-xl"></i>
+                            </div>
+                            <span class="badge bg-yellow-50 text-yellow-700">
+                                <i class="ri-error-warning-line mr-1"></i>
+                                Review
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">ECG Report</h3>
+                        <div class="space-y-2 mb-4">
+                            <p class="text-sm text-gray-600 flex items-center">
+                                <i class="ri-hospital-line mr-2 text-gray-400"></i>
+                                Heart Care Center
+                            </p>
+                            <p class="text-sm text-gray-600 flex items-center">
+                                <i class="ri-stethoscope-line mr-2 text-gray-400"></i>
+                                Dr. Michael Chen
+                            </p>
+                            <p class="text-sm text-gray-600 flex items-center">
+                                <i class="ri-calendar-line mr-2 text-gray-400"></i>
+                                January 10, 2024
+                            </p>
+                        </div>
+                        <button class="w-full bg-indigo-50 text-indigo-600 py-3 rounded-xl font-semibold hover:bg-indigo-100 transition flex items-center justify-center">
+                            <i class="ri-eye-line mr-2"></i>
+                            View Report
+                        </button>
+                    </div>
+
+                    <!-- Report Card 3 -->
+                    <div class="bg-white rounded-2xl p-6 smooth-shadow card-hover">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="w-12 h-12 bg-gradient-to-br from-teal-500 to-green-500 rounded-xl flex items-center justify-center">
+                                <i class="ri-microscope-line text-white text-xl"></i>
+                            </div>
+                            <span class="badge bg-green-50 text-green-700">
+                                <i class="ri-check-line mr-1"></i>
+                                Normal
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">Liver Function Test</h3>
+                        <div class="space-y-2 mb-4">
+                            <p class="text-sm text-gray-600 flex items-center">
+                                <i class="ri-hospital-line mr-2 text-gray-400"></i>
+                                Metro Diagnostics
+                            </p>
+                            <p class="text-sm text-gray-600 flex items-center">
+                                <i class="ri-stethoscope-line mr-2 text-gray-400"></i>
+                                Dr. Emily Brown
+                            </p>
+                            <p class="text-sm text-gray-600 flex items-center">
+                                <i class="ri-calendar-line mr-2 text-gray-400"></i>
+                                December 28, 2023
+                            </p>
+                        </div>
+                        <button class="w-full bg-indigo-50 text-indigo-600 py-3 rounded-xl font-semibold hover:bg-indigo-100 transition flex items-center justify-center">
+                            <i class="ri-eye-line mr-2"></i>
+                            View Report
+                        </button>
+                    </div>
+
+                    <!-- Report Card 4 -->
+                    <div class="bg-white rounded-2xl p-6 smooth-shadow card-hover">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+                                <i class="ri-lungs-line text-white text-xl"></i>
+                            </div>
+                            <span class="badge bg-green-50 text-green-700">
+                                <i class="ri-check-line mr-1"></i>
+                                Normal
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">Chest X-Ray</h3>
+                        <div class="space-y-2 mb-4">
+                            <p class="text-sm text-gray-600 flex items-center">
+                                <i class="ri-hospital-line mr-2 text-gray-400"></i>
+                                Radiology Center
+                            </p>
+                            <p class="text-sm text-gray-600 flex items-center">
+                                <i class="ri-stethoscope-line mr-2 text-gray-400"></i>
+                                Dr. David Wilson
+                            </p>
+                            <p class="text-sm text-gray-600 flex items-center">
+                                <i class="ri-calendar-line mr-2 text-gray-400"></i>
+                                December 20, 2023
+                            </p>
+                        </div>
+                        <button class="w-full bg-indigo-50 text-indigo-600 py-3 rounded-xl font-semibold hover:bg-indigo-100 transition flex items-center justify-center">
+                            <i class="ri-eye-line mr-2"></i>
+                            View Report
+                        </button>
+                    </div>
+
+                    <!-- Report Card 5 -->
+                    <div class="bg-white rounded-2xl p-6 smooth-shadow card-hover">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
+                                <i class="ri-capsule-line text-white text-xl"></i>
+                            </div>
+                            <span class="badge bg-green-50 text-green-700">
+                                <i class="ri-check-line mr-1"></i>
+                                Normal
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">Thyroid Function Test</h3>
+                        <div class="space-y-2 mb-4">
+                            <p class="text-sm text-gray-600 flex items-center">
+                                <i class="ri-hospital-line mr-2 text-gray-400"></i>
+                                Wellness Lab
+                            </p>
+                            <p class="text-sm text-gray-600 flex items-center">
+                                <i class="ri-stethoscope-line mr-2 text-gray-400"></i>
+                                Dr. Lisa Anderson
+                            </p>
+                            <p class="text-sm text-gray-600 flex items-center">
+                                <i class="ri-calendar-line mr-2 text-gray-400"></i>
+                                December 15, 2023
+                            </p>
+                        </div>
+                        <button class="w-full bg-indigo-50 text-indigo-600 py-3 rounded-xl font-semibold hover:bg-indigo-100 transition flex items-center justify-center">
+                            <i class="ri-eye-line mr-2"></i>
+                            View Report
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Floating Add Button (Only in Edit Mode) -->
+    <a href="add-report.html" id="addReportBtn" class="floating-btn bg-gradient-to-r from-purple-600 to-pink-600 text-white w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 hidden">
+        <i class="ri-add-line text-3xl"></i>
+    </a>
+
+    <!-- Footer -->
+    <footer class="mt-20 py-8 bg-white/80 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 text-center text-gray-600">
+            <p>&copy; 2024 HealthVault ID. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Check if user is logged in
+        const healthId = sessionStorage.getItem('healthId');
+        const editMode = sessionStorage.getItem('editMode') === 'true';
+
+        if (!healthId) {
+            window.location.href = 'index.html';
+        }
+
+        // Display health ID
+        document.getElementById('healthIdDisplay').innerHTML = `
+            <i class="ri-fingerprint-line mr-2"></i>
+            Health ID: <span class="font-semibold ml-2">${healthId}</span>
+        `;
+
+        // Show/hide add button based on edit mode
+        if (editMode) {
+            document.getElementById('addReportBtn').classList.remove('hidden');
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                sessionStorage.clear();
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Add smooth scroll behavior
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

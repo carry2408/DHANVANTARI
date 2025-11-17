@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Records - HealthVault ID</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        secondary: '#8b5cf6',
+                        accent: '#06b6d4',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .smooth-shadow {
+            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.15);
+        }
+        
+        .btn-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .btn-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-purple-50 to-teal-50 min-h-screen">
+    
+    <!-- Navbar -->
+    <nav class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="index.html" class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+                        <i class="ri-heart-pulse-fill text-white text-xl"></i>
+                    </div>
+                    <span class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                        HealthVault ID
+                    </span>
+                </a>
+                <a href="index.html" class="text-gray-700 hover:text-indigo-600 transition flex items-center">
+                    <i class="ri-arrow-left-line mr-2"></i>
+                    Back to Home
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div class="fade-in">
+            <!-- Login Card -->
+            <div class="bg-white rounded-3xl p-8 md:p-12 smooth-shadow">
+                
+                <!-- Icon -->
+                <div class="flex justify-center mb-8">
+                    <div class="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                        <i class="ri-folder-user-line text-white text-4xl"></i>
+                    </div>
+                </div>
+
+                <!-- Title -->
+                <div class="text-center mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-3">View Your Records</h1>
+                    <p class="text-gray-600">
+                        Enter your Health ID to access your medical records
+                    </p>
+                </div>
+
+                <!-- Form -->
+                <form id="viewLoginForm" class="space-y-6">
+                    
+                    <!-- Health ID Input -->
+                    <div>
+                        <label for="healthId" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Health ID
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <i class="ri-user-line text-gray-400 text-xl"></i>
+                            </div>
+                            <input 
+                                type="text" 
+                                id="healthId" 
+                                name="healthId"
+                                placeholder="Enter your Health ID"
+                                class="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition text-gray-900 font-medium"
+                                required
+                            >
+                        </div>
+                        <p class="mt-2 text-sm text-gray-500">
+                            <i class="ri-information-line"></i>
+                            Example: HV123456789
+                        </p>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button 
+                        type="submit"
+                        class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg btn-hover smooth-shadow flex items-center justify-center space-x-2"
+                    >
+                        <span>View Records</span>
+                        <i class="ri-arrow-right-line text-xl"></i>
+                    </button>
+
+                </form>
+
+                <!-- Divider -->
+                <div class="relative my-8">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-4 bg-white text-gray-500">OR</span>
+                    </div>
+                </div>
+
+                <!-- Alternative Action -->
+                <div class="text-center">
+                    <p class="text-gray-600 mb-4">Are you a healthcare provider?</p>
+                    <a 
+                        href="edit-login.html" 
+                        class="inline-flex items-center justify-center px-6 py-3 bg-white text-indigo-600 rounded-xl font-semibold border-2 border-indigo-600 hover:bg-indigo-50 transition"
+                    >
+                        <i class="ri-hospital-line mr-2"></i>
+                        Hospital/Doctor Login
+                    </a>
+                </div>
+
+                <!-- Help Text -->
+                <div class="mt-8 pt-6 border-t border-gray-200">
+                    <div class="flex items-start space-x-3 text-sm text-gray-600">
+                        <i class="ri-shield-check-line text-green-500 text-xl"></i>
+                        <p>
+                            Your data is encrypted and secure. We never share your information without your consent.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Additional Info -->
+            <div class="mt-8 text-center">
+                <p class="text-gray-600">
+                    Don't have a Health ID? 
+                    <a href="#" class="text-indigo-600 font-semibold hover:underline">Register Now</a>
+                </p>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-20 py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center text-gray-600">
+            <p>&copy; 2024 HealthVault ID. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        document.getElementById('viewLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const healthId = document.getElementById('healthId').value;
+            
+            if (healthId.trim() !== '') {
+                // Store health ID in session storage
+                sessionStorage.setItem('healthId', healthId);
+                sessionStorage.setItem('viewMode', 'true');
+                
+                // Redirect to dashboard
+                window.location.href = 'dashboard.html';
+            }
+        });
+    </script>
+
+</body>
+</html>
