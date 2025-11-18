@@ -89,151 +89,167 @@
       <div id="message" class="mt-4 text-center text-sm"></div>
     </div>
     <script>
-      const steps = Array.from(document.querySelectorAll('.step'));
-      let current = 0;
-      const nextBtn = document.getElementById('nextBtn');
-      const backBtn = document.getElementById('backBtn');
-      const msg = document.getElementById('message');
-      const serverStatus = document.getElementById('serverStatus');
+  // 🔥 ADD BASE URL HERE
+  const BASE_URL = "https://healthvault-api-f1d6.onrender.com";
 
-      function showStep(index) {
-        steps.forEach((s, i) => s.classList.toggle('hidden', i !== index));
-        backBtn.disabled = index === 0;
-        nextBtn.textContent = index === steps.length - 1 ? 'Submit' : 'Next';
-        updateProgress(index);
-        msg.textContent = '';
+  const steps = Array.from(document.querySelectorAll('.step'));
+  let current = 0;
+  const nextBtn = document.getElementById('nextBtn');
+  const backBtn = document.getElementById('backBtn');
+  const msg = document.getElementById('message');
+  const serverStatus = document.getElementById('serverStatus');
+
+  function showStep(index) {
+    steps.forEach((s, i) => s.classList.toggle('hidden', i !== index));
+    backBtn.disabled = index === 0;
+    nextBtn.textContent = index === steps.length - 1 ? 'Submit' : 'Next';
+    updateProgress(index);
+    msg.textContent = '';
+  }
+
+  // Progress UI
+  const progressEls = Array.from(document.querySelectorAll('#progress .progress-step'));
+  function updateProgress(activeIndex) {
+    progressEls.forEach((el, i) => {
+      el.classList.remove('bg-indigo-600', 'bg-indigo-100', 'bg-white', 'text-white', 'text-gray-700', 'border-indigo-600', 'border-indigo-300', 'border-gray-200', 'shadow-md', 'shadow-sm');
+      if (i < activeIndex) {
+        el.classList.add('bg-indigo-600', 'text-white', 'border-indigo-600', 'shadow-md');
+      } else if (i === activeIndex) {
+        el.classList.add('bg-indigo-100', 'text-gray-700', 'border-indigo-300', 'shadow-sm');
+      } else {
+        el.classList.add('bg-white', 'text-gray-700', 'border-gray-200');
+      }
+    });
+  }
+
+  function gatherData() {
+    const ageVal = document.getElementById('age').value;
+    return {
+      healthId: document.getElementById('healthId').value.trim(),
+      password: document.getElementById('password').value,
+      name: document.getElementById('name').value.trim(),
+      gender: document.getElementById('gender').value,
+      age: ageVal ? parseInt(ageVal, 10) : null,
+      phone: document.getElementById('phone').value.trim(),
+      address: document.getElementById('address').value.trim(),
+    };
+  }
+
+  // ✅ FIXED: checkServerHealth
+  async function checkServerHealth() {
+    try {
+      const res = await fetch(`${BASE_URL}/api/health`);
+      if (!res.ok) throw new Error("Not OK");
+
+      const body = await res.json();
+      console.log("Health:", body);
+
+      // Your backend returns:
+      // { "status": "OK", "message": "HealthVault API is running" }
+      if (body.status === "OK") {
+        serverStatus.textContent = "Server: online";
+        serverStatus.className = "text-center text-sm text-green-600 mb-4";
+        return true;
+      }
+      throw new Error();
+    } catch (e) {
+      serverStatus.textContent = "Server: offline";
+      serverStatus.className = "text-center text-sm text-red-600 mb-4";
+      return false;
+    }
+  }
+
+  nextBtn.addEventListener('click', async () => {
+    msg.textContent = '';
+
+    if (current === 0) {
+      const h = healthId.value.trim();
+      const p = password.value;
+      const cp = confirmPassword.value;
+
+      if (!h || !p) return msg.textContent = "Health ID and password are required.";
+      if (p.length < 6) return msg.textContent = "Password must be at least 6 characters.";
+      if (p !== cp) return msg.textContent = "Passwords do not match.";
+
+      current++; showStep(current);
+      return;
+    }
+
+    if (current === 1) {
+      if (!name.value.trim()) return msg.textContent = "Full name is required.";
+      const d = gatherData();
+      document.getElementById('rev-healthId').textContent = d.healthId;
+      document.getElementById('rev-name').textContent = d.name;
+      document.getElementById('rev-gender').textContent = d.gender || '-';
+      document.getElementById('rev-age').textContent = d.age || '-';
+      document.getElementById('rev-phone').textContent = d.phone || '-';
+      document.getElementById('rev-address').textContent = d.address || '-';
+      current++; showStep(current);
+      return;
+    }
+
+    // Step 3 Submit
+    if (current === 2) {
+      const data = gatherData();
+
+      if (!data.healthId || !data.password || !data.name) {
+        msg.textContent = "Missing required fields.";
+        return;
       }
 
-      // Update the visual rectangles above the form to reflect progress
-      const progressEls = Array.from(document.querySelectorAll('#progress .progress-step'));
-      function updateProgress(activeIndex) {
-        progressEls.forEach((el, i) => {
-          el.classList.remove('bg-indigo-600', 'bg-indigo-100', 'bg-white', 'text-white', 'text-gray-700', 'border-indigo-600', 'border-indigo-300', 'border-gray-200', 'shadow-md', 'shadow-sm');
-          if (i < activeIndex) {
-            el.classList.add('bg-indigo-600', 'text-white', 'border-indigo-600', 'shadow-md');
-          } else if (i === activeIndex) {
-            el.classList.add('bg-indigo-100', 'text-gray-700', 'border-indigo-300', 'shadow-sm');
-          } else {
-            el.classList.add('bg-white', 'text-gray-700', 'border-gray-200');
-          }
+      const healthy = await checkServerHealth();
+      if (!healthy) {
+        msg.textContent = "Backend offline or unreachable.";
+        return;
+      }
+
+      try {
+        nextBtn.disabled = true;
+        backBtn.disabled = true;
+        const old = nextBtn.innerHTML;
+        nextBtn.innerHTML = `<i class="ri-loader-4-line animate-spin mr-2"></i>Submitting...`;
+
+        // ✅ FIXED: FULL ABSOLUTE URL
+        const res = await fetch(`${BASE_URL}/api/auth/patient/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
         });
-      }
 
-      function gatherData() {
-        const ageVal = document.getElementById('age').value;
-        return {
-          healthId: document.getElementById('healthId').value.trim(),
-          password: document.getElementById('password').value,
-          name: document.getElementById('name').value.trim(),
-          gender: document.getElementById('gender').value,
-          age: ageVal ? parseInt(ageVal, 10) : null,
-          phone: document.getElementById('phone').value.trim(),
-          address: document.getElementById('address').value.trim(),
-        };
-      }
+        const body = await res.json();
 
-      async function checkServerHealth() {
-        try {
-          const res = await fetch('/api/health');
-          console.log(res);
-          if (!res.ok) throw new Error('Unhealthy');
-          const body = await res.json();
-          if (body && body.success) {
-            serverStatus.textContent = 'Server: online';
-            serverStatus.className = 'text-center text-sm text-green-600 mb-4';
-            return true;
-          }
-        } catch (e) {
-          serverStatus.textContent = 'Server: offline (start backend with npm start)';
-          serverStatus.className = 'text-center text-sm text-red-600 mb-4';
-          return false;
-        }
-      }
-
-      nextBtn.addEventListener('click', async () => {
-        msg.textContent = '';
-
-        if (current === 0) {
-          const h = document.getElementById('healthId').value.trim();
-          const p = document.getElementById('password').value;
-          const cp = document.getElementById('confirmPassword').value;
-          if (!h || !p) { msg.textContent = 'Health ID and password are required.'; return; }
-          if (p.length < 6) { msg.textContent = 'Password must be at least 6 characters.'; return; }
-          if (p !== cp) { msg.textContent = 'Passwords do not match.'; return; }
-          current++; showStep(current);
+        if (!res.ok) {
+          msg.textContent = body.error || "Registration failed.";
+          nextBtn.disabled = false;
+          backBtn.disabled = false;
+          nextBtn.innerHTML = old;
           return;
         }
 
-        if (current === 1) {
-          const n = document.getElementById('name').value.trim();
-          if (!n) { msg.textContent = 'Full name is required.'; return; }
-          current++; showStep(current);
-          // populate review
-          const d = gatherData();
-          document.getElementById('rev-healthId').textContent = d.healthId;
-          document.getElementById('rev-name').textContent = d.name;
-          document.getElementById('rev-gender').textContent = d.gender || '-';
-          document.getElementById('rev-age').textContent = d.age || '-';
-          document.getElementById('rev-phone').textContent = d.phone || '-';
-          document.getElementById('rev-address').textContent = d.address || '-';
-          return;
-        }
+        msg.className = "mt-4 text-center text-sm text-green-700";
+        msg.textContent = "Registration successful! Redirecting...";
 
-        // Submit
-        if (current === 2) {
-          const data = gatherData();
-          // final client-side sanity
-          if (!data.healthId || !data.password || !data.name) {
-            msg.textContent = 'Missing required fields.'; return;
-          }
+        setTimeout(() => window.location.href = "view-login.html", 1200);
+      } catch (err) {
+        console.error(err);
+        msg.textContent = "Network error.";
+        nextBtn.disabled = false;
+        backBtn.disabled = false;
+      }
+    }
+  });
 
-          // confirm server available
-          const healthy = await checkServerHealth();
-          if (!healthy) { msg.textContent = 'Backend not available. Start server and try again.'; return; }
+  backBtn.addEventListener('click', () => {
+    if (current === 0) return;
+    current--; showStep(current);
+  });
 
-          try {
-            nextBtn.disabled = true; backBtn.disabled = true;
-            const originalText = nextBtn.innerHTML;
-            nextBtn.innerHTML = '<i class="ri-loader-4-line animate-spin mr-2"></i>Submitting...';
+  document.addEventListener('DOMContentLoaded', () => {
+    checkServerHealth();
+  });
 
-            const res = await fetch('/api/auth/patient/register', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(data),
-            });
-            const body = await res.json();
-            if (!res.ok) {
-              if (res.status === 409) {
-                msg.textContent = body.error || 'Health ID already registered.';
-              } else {
-                msg.textContent = body.error || 'Registration failed. See console for details.';
-                console.error('Register error', body);
-              }
-              nextBtn.disabled = false; backBtn.disabled = false; nextBtn.innerHTML = originalText;
-              return;
-            }
-            msg.className = 'mt-4 text-center text-sm text-green-700';
-            msg.textContent = 'Registration successful. Redirecting to login...';
-            setTimeout(() => window.location.href = 'view-login.html', 1200);
-          } catch (err) {
-            console.error(err);
-            msg.textContent = 'Network error. Try again.';
-            nextBtn.disabled = false; backBtn.disabled = false;
-          }
-        }
-      });
+  showStep(0);
+</script>
 
-      backBtn.addEventListener('click', () => {
-        if (current === 0) return;
-        current--; showStep(current);
-      });
-
-      // initial checks
-      document.addEventListener('DOMContentLoaded', async () => {
-        await checkServerHealth();
-      });
-
-      showStep(0);
-    </script>
   </body>
 </html>
