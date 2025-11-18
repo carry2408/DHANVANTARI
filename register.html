@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Register - Dhanvantari</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+  </head>
+  <body class="bg-gradient-to-br from-blue-50 via-purple-50 to-teal-50 min-h-screen flex items-center justify-center">
+    <div class="bg-white rounded-3xl p-8 shadow-xl max-w-2xl w-full">
+      <h1 class="text-2xl font-bold mb-2 text-center">Create your Dhanvantari Account</h1>
+      <div id="serverStatus" class="text-center text-sm text-gray-600 mb-4">Checking server...</div>
+
+      <!-- Progress -->
+      <div id="progress" class="flex items-center gap-3 mb-6">
+        <div class="progress-step flex-1 p-3 rounded-lg border border-gray-200 text-center text-sm text-gray-700 bg-white transition" data-step="1">Account</div>
+        <div class="progress-step flex-1 p-3 rounded-lg border border-gray-200 text-center text-sm text-gray-700 bg-white transition" data-step="2">Personal</div>
+        <div class="progress-step flex-1 p-3 rounded-lg border border-gray-200 text-center text-sm text-gray-700 bg-white transition" data-step="3">Confirm</div>
+      </div>
+
+      <form id="registerForm" class="space-y-6">
+        <!-- Step 1: Account -->
+        <div class="step" data-step="1">
+          <label class="block text-sm font-medium text-gray-700">Health ID</label>
+          <input id="healthId" name="healthId" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="e.g. HV123456789" />
+
+          <label class="block text-sm font-medium text-gray-700 mt-4">Password</label>
+          <input id="password" name="password" type="password" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+
+          <label class="block text-sm font-medium text-gray-700 mt-4">Confirm Password</label>
+          <input id="confirmPassword" type="password" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+        </div>
+
+        <!-- Step 2: Personal -->
+        <div class="step hidden" data-step="2">
+          <label class="block text-sm font-medium text-gray-700">Full Name</label>
+          <input id="name" name="name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+
+          <div class="grid grid-cols-3 gap-4 mt-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Gender</label>
+              <select id="gender" name="gender" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                <option value="">Select</option>
+                <option>Male</option>
+                <option>Female</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Age</label>
+                  <input id="age" name="age" type="number" min="0" placeholder="e.g. 34" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Phone</label>
+              <input id="phone" name="phone" placeholder="e.g. +1-555-123-4567" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+            </div>
+          </div>
+
+          <label class="block text-sm font-medium text-gray-700 mt-4">Address</label>
+          <textarea id="address" name="address" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+        </div>
+
+        <!-- Step 3: Review -->
+        <div class="step hidden" data-step="3">
+          <h3 class="font-medium">Review details</h3>
+          <div class="mt-3 text-sm text-gray-700 space-y-2">
+            <div><strong>Health ID:</strong> <span id="rev-healthId"></span></div>
+            <div><strong>Name:</strong> <span id="rev-name"></span></div>
+            <div><strong>Gender:</strong> <span id="rev-gender"></span></div>
+            <div><strong>Age:</strong> <span id="rev-age"></span></div>
+            <div><strong>Phone:</strong> <span id="rev-phone"></span></div>
+            <div><strong>Address:</strong> <span id="rev-address"></span></div>
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex items-center justify-between">
+          <div>
+            <button type="button" id="backBtn" class="px-4 py-2 bg-gray-200 rounded-md" disabled>Back</button>
+          </div>
+          <div class="flex items-center gap-3">
+            <button type="button" id="nextBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md">Next</button>
+            <a href="view-login.html" class="text-sm text-gray-600">Back to Login</a>
+          </div>
+        </div>
+      </form>
+
+      <div id="message" class="mt-4 text-center text-sm"></div>
+    </div>
+    <script>
+      const steps = Array.from(document.querySelectorAll('.step'));
+      let current = 0;
+      const nextBtn = document.getElementById('nextBtn');
+      const backBtn = document.getElementById('backBtn');
+      const msg = document.getElementById('message');
+      const serverStatus = document.getElementById('serverStatus');
+
+      function showStep(index) {
+        steps.forEach((s, i) => s.classList.toggle('hidden', i !== index));
+        backBtn.disabled = index === 0;
+        nextBtn.textContent = index === steps.length - 1 ? 'Submit' : 'Next';
+        updateProgress(index);
+        msg.textContent = '';
+      }
+
+      // Update the visual rectangles above the form to reflect progress
+      const progressEls = Array.from(document.querySelectorAll('#progress .progress-step'));
+      function updateProgress(activeIndex) {
+        progressEls.forEach((el, i) => {
+          el.classList.remove('bg-indigo-600', 'bg-indigo-100', 'bg-white', 'text-white', 'text-gray-700', 'border-indigo-600', 'border-indigo-300', 'border-gray-200', 'shadow-md', 'shadow-sm');
+          if (i < activeIndex) {
+            el.classList.add('bg-indigo-600', 'text-white', 'border-indigo-600', 'shadow-md');
+          } else if (i === activeIndex) {
+            el.classList.add('bg-indigo-100', 'text-gray-700', 'border-indigo-300', 'shadow-sm');
+          } else {
+            el.classList.add('bg-white', 'text-gray-700', 'border-gray-200');
+          }
+        });
+      }
+
+      function gatherData() {
+        const ageVal = document.getElementById('age').value;
+        return {
+          healthId: document.getElementById('healthId').value.trim(),
+          password: document.getElementById('password').value,
+          name: document.getElementById('name').value.trim(),
+          gender: document.getElementById('gender').value,
+          age: ageVal ? parseInt(ageVal, 10) : null,
+          phone: document.getElementById('phone').value.trim(),
+          address: document.getElementById('address').value.trim(),
+        };
+      }
+
+      async function checkServerHealth() {
+        try {
+          const res = await fetch('/api/health');
+          if (!res.ok) throw new Error('Unhealthy');
+          const body = await res.json();
+          if (body && body.success) {
+            serverStatus.textContent = 'Server: online';
+            serverStatus.className = 'text-center text-sm text-green-600 mb-4';
+            return true;
+          }
+        } catch (e) {
+          serverStatus.textContent = 'Server: offline (start backend with npm start)';
+          serverStatus.className = 'text-center text-sm text-red-600 mb-4';
+          return false;
+        }
+      }
+
+      nextBtn.addEventListener('click', async () => {
+        msg.textContent = '';
+
+        if (current === 0) {
+          const h = document.getElementById('healthId').value.trim();
+          const p = document.getElementById('password').value;
+          const cp = document.getElementById('confirmPassword').value;
+          if (!h || !p) { msg.textContent = 'Health ID and password are required.'; return; }
+          if (p.length < 6) { msg.textContent = 'Password must be at least 6 characters.'; return; }
+          if (p !== cp) { msg.textContent = 'Passwords do not match.'; return; }
+          current++; showStep(current);
+          return;
+        }
+
+        if (current === 1) {
+          const n = document.getElementById('name').value.trim();
+          if (!n) { msg.textContent = 'Full name is required.'; return; }
+          current++; showStep(current);
+          // populate review
+          const d = gatherData();
+          document.getElementById('rev-healthId').textContent = d.healthId;
+          document.getElementById('rev-name').textContent = d.name;
+          document.getElementById('rev-gender').textContent = d.gender || '-';
+          document.getElementById('rev-age').textContent = d.age || '-';
+          document.getElementById('rev-phone').textContent = d.phone || '-';
+          document.getElementById('rev-address').textContent = d.address || '-';
+          return;
+        }
+
+        // Submit
+        if (current === 2) {
+          const data = gatherData();
+          // final client-side sanity
+          if (!data.healthId || !data.password || !data.name) {
+            msg.textContent = 'Missing required fields.'; return;
+          }
+
+          // confirm server available
+          const healthy = await checkServerHealth();
+          if (!healthy) { msg.textContent = 'Backend not available. Start server and try again.'; return; }
+
+          try {
+            nextBtn.disabled = true; backBtn.disabled = true;
+            const originalText = nextBtn.innerHTML;
+            nextBtn.innerHTML = '<i class="ri-loader-4-line animate-spin mr-2"></i>Submitting...';
+
+            const res = await fetch('/api/auth/patient/register', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data),
+            });
+            const body = await res.json();
+            if (!res.ok) {
+              if (res.status === 409) {
+                msg.textContent = body.error || 'Health ID already registered.';
+              } else {
+                msg.textContent = body.error || 'Registration failed. See console for details.';
+                console.error('Register error', body);
+              }
+              nextBtn.disabled = false; backBtn.disabled = false; nextBtn.innerHTML = originalText;
+              return;
+            }
+            msg.className = 'mt-4 text-center text-sm text-green-700';
+            msg.textContent = 'Registration successful. Redirecting to login...';
+            setTimeout(() => window.location.href = 'view-login.html', 1200);
+          } catch (err) {
+            console.error(err);
+            msg.textContent = 'Network error. Try again.';
+            nextBtn.disabled = false; backBtn.disabled = false;
+          }
+        }
+      });
+
+      backBtn.addEventListener('click', () => {
+        if (current === 0) return;
+        current--; showStep(current);
+      });
+
+      // initial checks
+      document.addEventListener('DOMContentLoaded', async () => {
+        await checkServerHealth();
+      });
+
+      showStep(0);
+    </script>
+  </body>
+</html>

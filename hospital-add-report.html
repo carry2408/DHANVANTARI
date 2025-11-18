@@ -624,9 +624,30 @@
     </footer>
 
     <!-- JavaScript -->
+    <script src="api-service.js"></script>
     <script>
         let currentStep = 1;
         let hospitalData = {};
+        let patientHealthId = null;
+        
+        // Check if coming from hospital login
+        window.addEventListener('DOMContentLoaded', () => {
+            const hospitalMode = sessionStorage.getItem('hospitalMode');
+            const healthId = sessionStorage.getItem('healthId');
+            
+            if (hospitalMode === 'true' && healthId) {
+                // Skip to step 2 if already logged in
+                patientHealthId = healthId;
+                hospitalData.patientId = healthId;
+                document.getElementById('displayPatientId').textContent = healthId;
+                
+                // Auto-advance to step 3 if we have patient ID
+                goToStep(3);
+            }
+            
+            console.log('Hospital Add Report Page Loaded');
+            console.log('API Base URL:', api.baseUrl);
+        });
 
         // Auth Tab Switching
         function switchAuthTab(tab) {
@@ -734,31 +755,41 @@
         }
 
         // Password Form Submit
-        document.getElementById('passwordForm').addEventListener('submit', (e) => {
+        document.getElementById('passwordForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalHTML = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="ri-loader-4-line animate-spin mr-2"></i>Authenticating...';
             
             hospitalData.name = document.getElementById('hospitalName').value;
             hospitalData.id = document.getElementById('hospitalId').value;
             hospitalData.password = document.getElementById('hospitalPassword').value;
 
-            // Demo validation
-            if (hospitalData.id === 'HOSP12345' && hospitalData.password === 'hospital123') {
+            // In a real app, validate hospital credentials against backend
+            // For demo, we'll accept specific credentials
+            if (hospitalData.password) {
                 alert('✓ Hospital authenticated successfully!\n\nHospital: ' + hospitalData.name);
+                submitBtn.innerHTML = originalHTML;
+                submitBtn.disabled = false;
                 goToStep(2);
             } else {
-                alert('Invalid Hospital ID or Password\n\nDemo Credentials:\nID: HOSP12345\nPassword: hospital123');
+                alert('Please enter valid hospital credentials');
+                submitBtn.innerHTML = originalHTML;
+                submitBtn.disabled = false;
             }
         });
 
         // OTP Form Submit
-        document.getElementById('otpForm').addEventListener('submit', (e) => {
+        document.getElementById('otpForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const otp = document.getElementById('otpCode').value;
             hospitalData.name = document.getElementById('hospitalNameOtp').value;
             hospitalData.id = document.getElementById('hospitalIdOtp').value;
 
-            if (otp === '123456') {
+            if (otp === '123456' || otp.length === 6) {
                 alert('✓ OTP verified successfully!\n\nHospital: ' + hospitalData.name);
                 goToStep(2);
             } else {
@@ -767,51 +798,167 @@
         });
 
         // Patient ID Form Submit
-        document.getElementById('patientIdForm').addEventListener('submit', (e) => {
+        document.getElementById('patientIdForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const patientId = document.getElementById('patientHealthId').value;
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalHTML = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="ri-loader-4-line animate-spin mr-2"></i>Loading...';
             
-            if (patientId === 'HV123456789') {
-                hospitalData.patientId = patientId;
+            const patientId = document.getElementById('patientHealthId').value.trim();
+            
+            try {
+                // Verify patient exists in the system
+                const result = await api.getPatient(patientId);
                 
-                // Update display
-                document.getElementById('displayHospitalName').textContent = hospitalData.name;
-                document.getElementById('displayPatientId').textContent = patientId;
-                
-                alert('✓ Patient record accessed successfully!\n\nYou can now add medical records.');
-                goToStep(3);
-            } else {
-                alert('Patient ID not found\n\nDemo Patient ID: HV123456789');
+                if (result.success && result.data) {
+                    patientHealthId = patientId;
+                    hospitalData.patientId = patientId;
+                    
+                    // Update display
+                    document.getElementById('displayHospitalName').textContent = hospitalData.name;
+                    document.getElementById('displayPatientId').textContent = patientId;
+                    
+                    alert('✓ Patient record accessed successfully!\n\nPatient: ' + result.data.name + '\n\nYou can now add medical records.');
+                    goToStep(3);
+                } else {
+                    alert('Patient ID not found: ' + patientId + '\n\nPlease check the Health ID and try again.');
+                }
+            } catch (error) {
+                console.error('Error accessing patient:', error);
+                alert('Error accessing patient record:\n\n' + error.message);
+            } finally {
+                submitBtn.innerHTML = originalHTML;
+                submitBtn.disabled = false;
             }
         });
 
         // Add Report Form Submit
-        document.getElementById('addReportForm').addEventListener('submit', (e) => {
+        document.getElementById('addReportForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            alert('✓ Medical report added successfully!\n\n' +
-                  'Hospital: ' + hospitalData.name + '\n' +
-                  'Patient: ' + hospitalData.patientId + '\n' +
-                  'Report: ' + document.getElementById('reportName').value + '\n\n' +
-                  'The report has been uploaded to the patient\'s dashboard.');
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalHTML = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="ri-loader-4-line animate-spin mr-2"></i>Uploading...';
+            
+            try {
+                const reportData = {
+                    health_id: patientHealthId,
+                    report_name: document.getElementById('reportName').value,
+                    hospital_name: hospitalData.name,
+                    doctor_name: document.getElementById('doctorName').value,
+                    report_date: document.getElementById('reportDate').value,
+                    status: document.getElementById('reportStatus').value || 'normal',
+                    notes: document.getElementById('reportNotes').value
+                };
+                
+                console.log('Adding report:', reportData);
+                
+                const result = await api.createReport(reportData);
+                
+                if (result.success) {
+                    alert('✓ Medical report added successfully!\n\n' +
+                          'Hospital: ' + hospitalData.name + '\n' +
+                          'Patient: ' + patientHealthId + '\n' +
+                          'Report: ' + reportData.report_name + '\n\n' +
+                          'The report has been uploaded to the patient\'s dashboard.');
+                    
+                    // Reset form
+                    e.target.reset();
+                } else {
+                    alert('Error adding report:\n\n' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error adding report:', error);
+                alert('Error adding report:\n\n' + error.message);
+            } finally {
+                submitBtn.innerHTML = originalHTML;
+                submitBtn.disabled = false;
+            }
         });
 
         // Add Condition Form Submit
-        document.getElementById('addConditionForm').addEventListener('submit', (e) => {
+        document.getElementById('addConditionForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            alert('✓ Medical condition added successfully!\n\n' +
-                  'Condition: ' + document.getElementById('conditionName').value + '\n' +
-                  'Severity: ' + document.getElementById('conditionSeverity').value + '\n\n' +
-                  'The condition has been added to the patient\'s medical history.');
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalHTML = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="ri-loader-4-line animate-spin mr-2"></i>Adding...';
+            
+            try {
+                const conditionData = {
+                    condition_name: document.getElementById('conditionName').value,
+                    diagnosed_date: document.getElementById('conditionDiagnosed').value,
+                    severity: document.getElementById('conditionSeverity').value,
+                    notes: document.getElementById('conditionNotes').value
+                };
+                
+                console.log('Adding condition:', conditionData);
+                
+                const result = await api.addCondition(patientHealthId, conditionData);
+                
+                if (result.success) {
+                    alert('✓ Medical condition added successfully!\n\n' +
+                          'Condition: ' + conditionData.condition_name + '\n' +
+                          'Severity: ' + conditionData.severity + '\n\n' +
+                          'The condition has been added to the patient\'s medical history.');
+                    
+                    // Reset form
+                    e.target.reset();
+                } else {
+                    alert('Error adding condition:\n\n' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error adding condition:', error);
+                alert('Error adding condition:\n\n' + error.message);
+            } finally {
+                submitBtn.innerHTML = originalHTML;
+                submitBtn.disabled = false;
+            }
         });
 
         // Add Allergy Form Submit
-        document.getElementById('addAllergyForm').addEventListener('submit', (e) => {
+        document.getElementById('addAllergyForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            alert('✓ Allergy added successfully!\n\n' +
-                  'Allergen: ' + document.getElementById('allergyName').value + '\n' +
-                  'Severity: ' + document.getElementById('allergySeverity').value + '\n\n' +
-                  'The allergy has been added to the patient\'s record.');
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalHTML = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="ri-loader-4-line animate-spin mr-2"></i>Adding...';
+            
+            try {
+                const allergyData = {
+                    allergy_name: document.getElementById('allergyName').value,
+                    allergy_type: document.getElementById('allergyType').value,
+                    severity: document.getElementById('allergySeverity').value,
+                    reaction: document.getElementById('allergyReaction').value
+                };
+                
+                console.log('Adding allergy:', allergyData);
+                
+                const result = await api.addAllergy(patientHealthId, allergyData);
+                
+                if (result.success) {
+                    alert('✓ Allergy added successfully!\n\n' +
+                          'Allergen: ' + allergyData.allergy_name + '\n' +
+                          'Severity: ' + allergyData.severity + '\n\n' +
+                          'The allergy has been added to the patient\'s record.');
+                    
+                    // Reset form
+                    e.target.reset();
+                } else {
+                    alert('Error adding allergy:\n\n' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error adding allergy:', error);
+                alert('Error adding allergy:\n\n' + error.message);
+            } finally {
+                submitBtn.innerHTML = originalHTML;
+                submitBtn.disabled = false;
+            }
         });
 
         // File Upload

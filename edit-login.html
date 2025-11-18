@@ -309,6 +309,7 @@
     </footer>
 
     <!-- JavaScript -->
+    <script src="api-service.js"></script>
     <script>
         // Toggle between Password and OTP forms
         function switchTab(type) {
@@ -355,48 +356,127 @@
             const phone = document.getElementById('phone').value;
             const healthId = document.getElementById('healthIdOtp').value;
             
-            if (phone && healthId) {
-                // Show OTP input field
-                document.getElementById('otpInputDiv').classList.remove('hidden');
-                document.getElementById('verifyOtpBtn').classList.remove('hidden');
-                
-                // Show success message (in real app, this would send actual OTP)
-                alert('OTP sent to ' + phone);
+            if (!phone || !healthId) {
+                alert('Please enter both Health ID and Phone Number');
+                return;
             }
+            
+            // Show OTP input field
+            document.getElementById('otpInputDiv').classList.remove('hidden');
+            document.getElementById('verifyOtpBtn').classList.remove('hidden');
+            
+            // In a real app, this would send actual OTP via SMS/Email
+            // For now, we'll simulate it
+            const simulatedOTP = '123456';
+            console.log('Simulated OTP:', simulatedOTP);
+            alert(`OTP sent to ${phone}\n\n[DEV MODE] Your OTP is: ${simulatedOTP}`);
         }
 
         // Handle password form submission
-        document.getElementById('passwordForm').addEventListener('submit', function(e) {
+        document.getElementById('passwordForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const healthId = document.getElementById('healthIdPassword').value;
-            const password = document.getElementById('password').value;
+            const healthId = document.getElementById('healthIdPassword').value.trim();
+            const password = document.getElementById('password').value.trim();
             
-            if (healthId.trim() !== '' && password.trim() !== '') {
-                // Store credentials in session storage
-                sessionStorage.setItem('healthId', healthId);
-                sessionStorage.setItem('editMode', 'true');
+            if (healthId === '' || password === '') {
+                alert('Please enter both Health ID and Password');
+                return;
+            }
+            
+            // Show loading state
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalHTML = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="ri-loader-4-line animate-spin mr-2"></i>Verifying...';
+            
+            try {
+                // Verify patient exists in the system
+                const result = await api.getPatient(healthId);
                 
-                // Redirect to dashboard
-                window.location.href = 'dashboard.html';
+                if (result.success && result.data) {
+                    // In a real app, you would verify password against backend
+                    // For now, we'll accept any password for demo purposes
+                    console.log('Hospital/Doctor login successful for patient:', healthId);
+                    
+                    // Store credentials in session storage
+                    sessionStorage.setItem('healthId', healthId);
+                    sessionStorage.setItem('editMode', 'true');
+                    sessionStorage.setItem('hospitalMode', 'true');
+                    sessionStorage.setItem('patientData', JSON.stringify(result.data));
+                    
+                    // Redirect to hospital add report page
+                    window.location.href = 'hospital-add-report.html';
+                } else {
+                    alert('Patient not found with Health ID: ' + healthId + '\n\nPlease check the Health ID and try again.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalHTML;
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Error connecting to server:\n\n' + error.message);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalHTML;
             }
         });
 
         // Handle OTP form submission
-        document.getElementById('otpForm').addEventListener('submit', function(e) {
+        document.getElementById('otpForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const healthId = document.getElementById('healthIdOtp').value;
-            const otpCode = document.getElementById('otpCode').value;
+            const healthId = document.getElementById('healthIdOtp').value.trim();
+            const otpCode = document.getElementById('otpCode').value.trim();
             
-            if (healthId.trim() !== '' && otpCode.trim() !== '') {
-                // Store credentials in session storage
-                sessionStorage.setItem('healthId', healthId);
-                sessionStorage.setItem('editMode', 'true');
-                
-                // Redirect to dashboard
-                window.location.href = 'dashboard.html';
+            if (healthId === '' || otpCode === '') {
+                alert('Please enter both Health ID and OTP');
+                return;
             }
+            
+            // Verify OTP (in real app, this would verify against backend)
+            // For demo, we'll accept '123456' as valid OTP
+            if (otpCode !== '123456') {
+                alert('Invalid OTP. Please try again.\n\n[DEV MODE] Use: 123456');
+                return;
+            }
+            
+            // Show loading state
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalHTML = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="ri-loader-4-line animate-spin mr-2"></i>Verifying...';
+            
+            try {
+                // Verify patient exists in the system
+                const result = await api.getPatient(healthId);
+                
+                if (result.success && result.data) {
+                    console.log('Hospital/Doctor OTP login successful for patient:', healthId);
+                    
+                    // Store credentials in session storage
+                    sessionStorage.setItem('healthId', healthId);
+                    sessionStorage.setItem('editMode', 'true');
+                    sessionStorage.setItem('hospitalMode', 'true');
+                    sessionStorage.setItem('patientData', JSON.stringify(result.data));
+                    
+                    // Redirect to hospital add report page
+                    window.location.href = 'hospital-add-report.html';
+                } else {
+                    alert('Patient not found with Health ID: ' + healthId + '\n\nPlease check the Health ID and try again.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalHTML;
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Error connecting to server:\n\n' + error.message);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalHTML;
+            }
+        });
+        
+        // Log API configuration on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('Edit Login Page Loaded');
+            console.log('API Base URL:', api.baseUrl);
         });
     </script>
 
