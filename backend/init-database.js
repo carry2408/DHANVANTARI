@@ -132,11 +132,13 @@ async function init() {
     `);
 
     console.log("✅ PostgreSQL initialization complete!");
-    process.exit(0);
+    
+    // IMPORTANT: Do NOT exit process ✔
+    return;
 
   } catch (err) {
     console.error("❌ Error initializing database:", err);
-    process.exit(1);
+    throw err; // send error to server.js
   }
 }
 
