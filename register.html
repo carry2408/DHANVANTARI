@@ -135,6 +135,7 @@
       async function checkServerHealth() {
         try {
           const res = await fetch('/api/health');
+          console.log(res);
           if (!res.ok) throw new Error('Unhealthy');
           const body = await res.json();
           if (body && body.success) {

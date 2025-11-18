@@ -96,4 +96,48 @@ router.post("/doctor/login", async (req, res) => {
   }
 });
 
+// 🧾 Patient Register
+router.post("/patient/register", async (req, res) => {
+  res.json({ message: "Registration endpoint is under construction." });
+  const { healthId, password, name, gender, age, phone, address } = req.body;
+
+  if (!healthId || !password || !name) {
+    return res.status(400).json({ error: "Health ID, password and name are required." });
+  }
+
+  try {
+    // Check if user exists
+    const exists = await pool.query(
+      "SELECT health_id FROM patients WHERE health_id = $1",
+      [healthId]
+    );
+
+    if (exists.rows.length > 0) {
+      return res.status(409).json({ error: "Health ID already registered." });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert new patient
+    const insert = await pool.query(
+      `INSERT INTO patients 
+        (health_id, password, name, gender, age, phone, address)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)
+       RETURNING health_id, name`,
+      [healthId, hashedPassword, name, gender, age, phone, address]
+    );
+
+    return res.status(201).json({
+      message: "Patient registered successfully",
+      patient: insert.rows[0]
+    });
+
+  } catch (err) {
+    console.error("Registration Error:", err);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
 module.exports = router;

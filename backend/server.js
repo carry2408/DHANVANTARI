@@ -4,6 +4,9 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const fs = require("fs");
 const path = require("path");
+const init = require("./init-database");
+
+
 
 // Import route files
 const authRoutes = require("./routes/auth");
@@ -12,6 +15,17 @@ const hospitalRoutes = require("./routes/hospitals");
 const reportRoutes = require("./routes/reports");
 
 const app = express();
+init()
+  .then(() => {
+    console.log("Database initialized ✔");
+
+    app.listen(3000, () => {
+      console.log("Server running on port 3000");
+    });
+  })
+  .catch(err => {
+    console.error("DB init failed ❌", err);
+  });
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = process.env.UPLOAD_PATH || "./uploads";
