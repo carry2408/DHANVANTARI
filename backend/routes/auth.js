@@ -98,7 +98,7 @@ router.post("/doctor/login", async (req, res) => {
 
 // 🧾 Patient Register
 router.post("/patient/register", async (req, res) => {
-  res.json({ message: "Registration endpoint is under construction." });
+  // res.json({ message: "Registration endpoint is under construction." });
   const { healthId, password, name, gender, age, phone, address } = req.body;
 
   if (!healthId || !password || !name) {
