@@ -122,18 +122,20 @@
     });
   }
 
-  function gatherData() {
-    const ageVal = document.getElementById('age').value;
-    return {
-      healthId: document.getElementById('healthId').value.trim(),
-      password: document.getElementById('password').value,
-      name: document.getElementById('name').value.trim(),
-      gender: document.getElementById('gender').value,
-      age: ageVal ? parseInt(ageVal, 10) : null,
-      phone: document.getElementById('phone').value.trim(),
-      address: document.getElementById('address').value.trim(),
-    };
-  }
+function gatherData() {
+  const ageVal = document.getElementById('age')?.value;
+
+  return {
+    healthId: document.getElementById('healthId')?.value?.trim() || "",
+    password: document.getElementById('password')?.value || "",
+    name: document.getElementById('name')?.value?.trim() || "",
+    gender: document.getElementById('gender')?.value || "",
+    age: ageVal ? parseInt(ageVal, 10) : null,
+    phone: document.getElementById('phone')?.value?.trim() || "",
+    address: document.getElementById('address')?.value?.trim() || "",
+  };
+}
+
 
   // ✅ FIXED: checkServerHealth
   async function checkServerHealth() {
