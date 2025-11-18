@@ -6,8 +6,6 @@ const fs = require("fs");
 const path = require("path");
 const init = require("./init-database");
 
-
-
 // Import route files
 const authRoutes = require("./routes/auth");
 const patientRoutes = require("./routes/patients");
@@ -15,17 +13,6 @@ const hospitalRoutes = require("./routes/hospitals");
 const reportRoutes = require("./routes/reports");
 
 const app = express();
-init()
-  .then(() => {
-    console.log("Database initialized ✔");
-
-    app.listen(10000, () => {
-      console.log("Server running on port 10000");
-    });
-  })
-  .catch(err => {
-    console.error("DB init failed ❌", err);
-  });
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = process.env.UPLOAD_PATH || "./uploads";
@@ -48,7 +35,7 @@ app.get("/api/health", (req, res) => {
     status: "OK",
     message: "HealthVault API is running",
     timestamp: new Date().toISOString(),
-    database: "PostgreSQL"
+    database: "PostgreSQL",
   });
 });
 
@@ -64,10 +51,20 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Something went wrong!" });
 });
 
-// Start server
+// USE RENDER PORT
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-  console.log(`🚀 HealthVault API Server running on port ${PORT}`);
-  console.log(`📍 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`🗄️  Database: PostgreSQL`);
-});
+
+// Start server ONLY ONCE
+init()
+  .then(() => {
+    console.log("Database initialized ✔");
+
+    app.listen(PORT, () => {
+      console.log(`🚀 HealthVault API Server running on port ${PORT}`);
+      console.log(`📍 Health check available at /api/health`);
+      console.log(`🗄️  Database: PostgreSQL`);
+    });
+  })
+  .catch((err) => {
+    console.error("DB init failed ❌", err);
+  });
